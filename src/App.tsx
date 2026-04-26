@@ -2,6 +2,10 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAppSelector } from './store/hooks';
 import Login from './features/auth/Login';
 import MainLayout from './features/dashboard/MainLayout';
+
+import { UsersView } from './features/users/Users';
+import { MenuView } from './features/menu/Menu';
+
 import type { JSX } from 'react';
 
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
@@ -18,17 +22,19 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
-        
         <Route 
-          path="/dashboard/*" 
+          path="/" 
           element={
             <ProtectedRoute>
               <MainLayout />
             </ProtectedRoute>
           } 
-        />
-        
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        >
+          <Route index element={<Navigate to="/menu" replace />} />
+          <Route path="users" element={<UsersView />} />
+          <Route path="menu" element={<MenuView />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/menu" replace />} />
       </Routes>
     </BrowserRouter>
   );

@@ -1,23 +1,32 @@
 import { createTokens, createTamagui } from 'tamagui';
-import { config } from '@tamagui/config/v3';
+import { config } from '@tamagui/config/v2';
 import { shorthands } from '@tamagui/shorthands';
 
 const color = {
   amber50: '#fffbeb',
-  amber200: '#fde68a',
+  amber100: '#fef3c6',
+  amber200: '#fee685',
   amber500: '#f59e0b',
   amber600: '#d97706',
-  amber700: '#b45309',
+  amber700: '#bb4d00',
+  orange100: '#fef3c6',
   orange50: '#fff7ed',
   orange500: '#f97316',
   white: '#ffffff',
   gray800: '#1f2937',
   gray600: '#4b5563',
+  gray200: '#e5e7eb',
+  green700: '#008236',
+  green100: '#dcfce7',
+  red700: '#c10007',
+  red100: '#ffe2e2',
+  buttonGreen: '#2ecc71',
+  buttonRed: '#fb2c36',
 };
 
 const tokens = createTokens({
   ...config.tokens,
-  color, // Note: Use 'color' here, not 'colorTokens'
+  color,
 });
 
 const themes = {
@@ -51,6 +60,7 @@ const themes = {
 
 const appConfig = createTamagui({
   ...config,
+  animations: config.animations,
   tokens,
   shorthands,
   themes,

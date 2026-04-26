@@ -1,18 +1,12 @@
-// src/store/apiSlice.ts
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { baseApi } from './baseApi';
 
-export const apiSlice = createApi({
-  reducerPath: 'api',
-  baseQuery: fetchBaseQuery({ 
-    baseUrl: 'http://localhost:8000/api/v1',
-  }),
+export const authApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     login: builder.mutation({
       query: (credentials) => {
         const formData = new FormData();
         formData.append('username', credentials.username);
         formData.append('password', credentials.password);
-
         return {
           url: '/auth/login',
           method: 'POST',
@@ -23,4 +17,4 @@ export const apiSlice = createApi({
   }),
 });
 
-export const { useLoginMutation } = apiSlice;
+export const { useLoginMutation } = authApi;

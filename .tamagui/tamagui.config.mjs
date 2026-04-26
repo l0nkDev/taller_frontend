@@ -2277,7 +2277,6 @@ var color2 = {
 var tokens3 = createTokens({
   ...config.tokens,
   color: color2
-  // Note: Use 'color' here, not 'colorTokens'
 });
 var themes3 = {
   light: {
@@ -2309,6 +2308,7 @@ var themes3 = {
 };
 var appConfig = createTamagui({
   ...config,
+  animations: config.animations,
   tokens: tokens3,
   shorthands: shorthands2,
   themes: themes3

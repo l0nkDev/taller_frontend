@@ -8,13 +8,15 @@ import {
   Spinner,
   Label,
   XStack,
-  H1,
+  H1
 } from "tamagui";
-import { useLoginMutation } from "../../store/apiSlice";
+import { useLoginMutation } from "../../api/authApi";
 import { useAppDispatch } from "../../store/hooks";
-import { setCredentials } from "../../store/index";
+import { setCredentials } from "../../store/authSlice";
 import { Lock, EyeOff, Eye, User } from "@tamagui/lucide-icons";
 import { Input } from "../../components/Input";
+import { isFetchBaseQueryError } from "../../utils/errorHelpers";
+import { useToastController } from "@tamagui/toast";
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
@@ -24,7 +26,9 @@ export default function Login() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
-  const [login, { isLoading, isError }] = useLoginMutation();
+  const [login, { isLoading }] = useLoginMutation();
+
+  const toast = useToastController();
 
   const handleLogin = async () => {
     try {
@@ -35,10 +39,30 @@ export default function Login() {
           user: data.user,
         }),
       );
-
       navigate("/dashboard");
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("FastAPI Login Error:", err);
+
+      let errorMessage = "No se pudo conectar con el servidor.";
+
+      if (isFetchBaseQueryError(err)) {
+        if (err.status === 401) {
+          errorMessage = "El usuario o la contraseña son incorrectos.";
+        } else if (err.status === 422) {
+          errorMessage = "Datos de formulario inválidos.";
+        } else if (
+          "data" in err &&
+          typeof err.data === "object" &&
+          err.data !== null
+        ) {
+          const backendData = err.data as { detail?: string };
+          if (backendData.detail) errorMessage = backendData.detail;
+        }
+      }
+      toast.show("Error de Acceso", {
+        message: errorMessage,
+        customData: { type: "error" },
+      });
     }
   };
 
@@ -119,7 +143,7 @@ export default function Login() {
                 bg="$cardBg"
                 placeholder="••••••••"
                 focusStyle={{ boc: "$brandMain" }}
-                type={showPassword ? "text" : "password"}
+                secureTextEntry={!showPassword}
                 outlineWidth={0}
               />
               <Button

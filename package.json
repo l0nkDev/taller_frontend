@@ -11,18 +11,20 @@
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.11.2",
-    "@tamagui/config": "2.0.0-rc.41",
-    "@tamagui/lucide-icons": "^1.144.4",
-    "@tamagui/shorthands": "^2.0.0-rc.41",
+    "@tamagui/config": "^1.126.12",
+    "@tamagui/lucide-icons": "^1.126.12",
+    "@tamagui/shorthands": "^1.126.12",
+    "@tamagui/toast": "^1.126.12",
+    "@tanstack/react-form": "^1.29.1",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.14.2",
-    "tamagui": "2.0.0-rc.41"
+    "tamagui": "^1.126.12"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
-    "@tamagui/vite-plugin": "2.0.0-rc.41",
+    "@tamagui/vite-plugin": "^1.126.12",
     "@types/node": "^24.12.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
@@ -34,11 +36,5 @@
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.58.2",
     "vite": "^8.0.3"
-  },
-  "overrides": {
-    "tamagui": "2.0.0-rc.41",
-    "@tamagui/core": "2.0.0-rc.41",
-    "@tamagui/web": "2.0.0-rc.41",
-    "@tamagui/shorthands": "2.0.0-rc.41"
   }
 }
