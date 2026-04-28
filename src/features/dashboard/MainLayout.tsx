@@ -115,7 +115,7 @@ export default function MainLayout() {
             onPress={handleLogout}
           >
             <Text color="white" fos="$3">
-              Gerente
+              Cerrar Sesión
             </Text>
           </Button>
         </XStack>

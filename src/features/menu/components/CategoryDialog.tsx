@@ -45,7 +45,6 @@ export function CategoryDialog({
         >
           <Button
             key={category.id}
-            onLongPress={() => setOpen(true)}
             onPress={() => setFilter!(category.id)}
             p="$4"
             bw={2}
