@@ -84,7 +84,7 @@ export default function MainLayout() {
               Tu Café - Cotoca
             </Text>
             <Text fos="$2" color="$amber200">
-              Gastronomía Artesanal
+              Comida típica
             </Text>
           </YStack>
         </XStack>
