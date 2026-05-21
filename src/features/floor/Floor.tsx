@@ -273,7 +273,9 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
     });
   };
 
-  const checkDeselect = (e: Konva.KonvaEventObject<MouseEvent>) => {
+  const checkDeselect = (
+    e: Konva.KonvaEventObject<MouseEvent | TouchEvent>,
+  ) => {
     const clickedOnEmpty = e.target === e.target.getStage();
     if (clickedOnEmpty) setSelectedIds([]);
   };
