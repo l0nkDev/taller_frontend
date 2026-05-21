@@ -486,193 +486,191 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
 
   return (
     <YStack f={1} gap={"$3"}>
-      {/* BARRA DE HERRAMIENTAS - AHORA CON TOGGLE DE EDICIÓN */}
-      <XStack
-        gap="$3"
-        p="$2"
-        bg="$cardBg"
-        bw={2}
-        boc="$cardBorder"
-        br="$4"
-        ai="center"
-        jc="space-between"
-      >
-        <XStack gap="$3" ai="center">
-          {isEditMode && (
-            <>
-              <Button size="$3" icon={PlusSquare} onPress={handleAddTable}>
-                Nueva Mesa
-              </Button>
-              <Button
-                size="$3"
-                icon={Combine}
-                onPress={handleGroup}
-                disabled={selectedIds.length < 2}
-                opacity={selectedIds.length < 2 ? 0.5 : 1}
-              >
-                Agrupar
-              </Button>
-              <Button
-                size="$3"
-                icon={Split}
-                onPress={handleUngroupOrDelete}
-                disabled={selectedIds.length !== 1}
-                opacity={selectedIds.length !== 1 ? 0.5 : 1}
-              >
-                {btnUngroupText}
-              </Button>
-            </>
-          )}
-        </XStack>
-
-        <Button
-          size="$3"
-          icon={isEditMode ? Lock : Pencil}
-          onPress={() => {
-            setIsEditMode(!isEditMode);
-            setSelectedIds([]);
-          }}
-        >
-          {isEditMode ? "Bloquear Mapa" : "Editar Mapa"}
-        </Button>
-      </XStack>
-
       <XStack f={1} gap={"$5"}>
-        {/* LIENZO KONVA */}
-        <Card bw={2} boc="$cardBorder" bg="$cardBg" br="$6" f={1}>
-          <YStack f={1} overflow="hidden">
-            <div
-              ref={containerRef}
-              style={{ width: "100%", height: "100%", borderRadius: "$6" }}
+        <YStack f={1} gap={"$3"}>
+          <XStack
+            gap="$3"
+            p="$2"
+            bg="$cardBg"
+            bw={2}
+            boc="$cardBorder"
+            br="$4"
+            ai="center"
+            jc="space-between"
+          >
+            <XStack gap="$3" ai="center">
+              {isEditMode && (
+                <>
+                  <Button size="$3" icon={PlusSquare} onPress={handleAddTable}>
+                    Nueva Mesa
+                  </Button>
+                  <Button
+                    size="$3"
+                    icon={Combine}
+                    onPress={handleGroup}
+                    disabled={selectedIds.length < 2}
+                    opacity={selectedIds.length < 2 ? 0.5 : 1}
+                  >
+                    Agrupar
+                  </Button>
+                  <Button
+                    size="$3"
+                    icon={Split}
+                    onPress={handleUngroupOrDelete}
+                    disabled={selectedIds.length !== 1}
+                    opacity={selectedIds.length !== 1 ? 0.5 : 1}
+                  >
+                    {btnUngroupText}
+                  </Button>
+                </>
+              )}
+            </XStack>
+
+            <Button
+              size="$3"
+              icon={isEditMode ? Lock : Pencil}
+              onPress={() => {
+                setIsEditMode(!isEditMode);
+                setSelectedIds([]);
+              }}
             >
-              <Stage
-                ref={stageRef}
-                width={dimensions.width}
-                height={dimensions.height}
-                draggable={true}
-                scaleX={stageScale}
-                scaleY={stageScale}
-                x={stagePos.x}
-                y={stagePos.y}
-                onWheel={handleWheel}
-                onDragEnd={(e) => {
-                  if (e.target === e.target.getStage())
-                    setStagePos({ x: e.target.x(), y: e.target.y() });
-                }}
-                onMouseDown={checkDeselect}
-                onTouchStart={checkDeselect}
-                style={{ cursor: "grab" }}
+              {isEditMode ? "Bloquear Mapa" : "Editar Mapa"}
+            </Button>
+          </XStack>
+          <Card bw={2} boc="$cardBorder" bg="$cardBg" br="$6" f={1}>
+            <YStack f={1} overflow="hidden">
+              <div
+                ref={containerRef}
+                style={{ width: "100%", height: "100%", borderRadius: "$6" }}
               >
-                <Layer>
-                  {floor.table_groups?.map((group) => {
-                    const groupId = `group-${group.id}`;
-                    const groupHasActiveOrder = activeOrders?.some(
-                      (o) => o.tablegroup_id === group.id,
-                    );
+                <Stage
+                  ref={stageRef}
+                  width={dimensions.width}
+                  height={dimensions.height}
+                  draggable={true}
+                  scaleX={stageScale}
+                  scaleY={stageScale}
+                  x={stagePos.x}
+                  y={stagePos.y}
+                  onWheel={handleWheel}
+                  onDragEnd={(e) => {
+                    if (e.target === e.target.getStage())
+                      setStagePos({ x: e.target.x(), y: e.target.y() });
+                  }}
+                  onMouseDown={checkDeselect}
+                  onTouchStart={checkDeselect}
+                  style={{ cursor: "grab" }}
+                >
+                  <Layer>
+                    {floor.table_groups?.map((group) => {
+                      const groupId = `group-${group.id}`;
+                      const groupHasActiveOrder = activeOrders?.some(
+                        (o) => o.tablegroup_id === group.id,
+                      );
 
-                    return (
-                      <Group
-                        key={groupId}
-                        id={groupId}
-                        x={group.pos_x}
-                        y={group.pos_y}
-                        rotation={group.rotation}
-                        draggable={isEditMode} // <-- FIX: Solo arrastrable en modo edición
-                        onClick={(e) => {
-                          e.cancelBubble = true;
-                          handleNodeSelect(e.currentTarget, e.evt.shiftKey);
-                        }}
-                        onDragEnd={(e) => {
-                          if (e.target !== e.currentTarget) return;
-                          e.cancelBubble = true;
-                          updateGroup({
-                            groupId: group.id,
-                            pos_x: e.target.x(),
-                            pos_y: e.target.y(),
-                          });
-                        }}
-                        onTransformEnd={(e) => {
-                          if (e.target !== e.currentTarget) return;
-                          const node = e.target;
-                          const scaleX = node.scaleX();
-                          const scaleY = node.scaleY();
-
-                          node.scaleX(1);
-                          node.scaleY(1);
-
-                          updateGroup({
-                            groupId: group.id,
-                            pos_x: node.x(),
-                            pos_y: node.y(),
-                            rotation: node.rotation(),
-                          });
-
-                          if (group.current_tables.length === 1) {
-                            const innerTable = group.current_tables[0];
-                            const newWidth = Math.max(
-                              20,
-                              Math.abs((innerTable.width || 60) * scaleX),
-                            );
-                            const newHeight = Math.max(
-                              20,
-                              Math.abs((innerTable.height || 60) * scaleY),
-                            );
-                            updateTable({
-                              tableId: innerTable.id,
-                              width: newWidth,
-                              height: newHeight,
+                      return (
+                        <Group
+                          key={groupId}
+                          id={groupId}
+                          x={group.pos_x}
+                          y={group.pos_y}
+                          rotation={group.rotation}
+                          draggable={isEditMode}
+                          onClick={(e) => {
+                            e.cancelBubble = true;
+                            handleNodeSelect(e.currentTarget, e.evt.shiftKey);
+                          }}
+                          onDragEnd={(e) => {
+                            if (e.target !== e.currentTarget) return;
+                            e.cancelBubble = true;
+                            updateGroup({
+                              groupId: group.id,
+                              pos_x: e.target.x(),
+                              pos_y: e.target.y(),
                             });
-                          }
-                        }}
-                      >
-                        {group.current_tables?.map((table) => (
-                          <TableNode
-                            key={`table-${table.id}`}
-                            table={table}
-                            isSelected={
-                              selectedIds.includes(`table-${table.id}`) ||
-                              selectedIds.includes(groupId)
+                          }}
+                          onTransformEnd={(e) => {
+                            if (e.target !== e.currentTarget) return;
+                            const node = e.target;
+                            const scaleX = node.scaleX();
+                            const scaleY = node.scaleY();
+
+                            node.scaleX(1);
+                            node.scaleY(1);
+
+                            updateGroup({
+                              groupId: group.id,
+                              pos_x: node.x(),
+                              pos_y: node.y(),
+                              rotation: node.rotation(),
+                            });
+
+                            if (group.current_tables.length === 1) {
+                              const innerTable = group.current_tables[0];
+                              const newWidth = Math.max(
+                                20,
+                                Math.abs((innerTable.width || 60) * scaleX),
+                              );
+                              const newHeight = Math.max(
+                                20,
+                                Math.abs((innerTable.height || 60) * scaleY),
+                              );
+                              updateTable({
+                                tableId: innerTable.id,
+                                width: newWidth,
+                                height: newHeight,
+                              });
                             }
-                            onSelect={handleNodeSelect}
-                            hasActiveOrder={!!groupHasActiveOrder}
-                          />
-                        ))}
-                      </Group>
-                    );
-                  })}
+                          }}
+                        >
+                          {group.current_tables?.map((table) => (
+                            <TableNode
+                              key={`table-${table.id}`}
+                              table={table}
+                              isSelected={
+                                selectedIds.includes(`table-${table.id}`) ||
+                                selectedIds.includes(groupId)
+                              }
+                              onSelect={handleNodeSelect}
+                              hasActiveOrder={!!groupHasActiveOrder}
+                            />
+                          ))}
+                        </Group>
+                      );
+                    })}
 
-                  {showTransformer && (
-                    <Transformer
-                      ref={transformerRef}
-                      enabledAnchors={
-                        disableScale
-                          ? []
-                          : [
-                              "top-left",
-                              "top-center",
-                              "top-right",
-                              "middle-right",
-                              "bottom-right",
-                              "bottom-center",
-                              "bottom-left",
-                              "middle-left",
-                            ]
-                      }
-                      resizeEnabled={!disableScale}
-                      boundBoxFunc={(oldBox, newBox) => {
-                        if (newBox.width < 20 || newBox.height < 20)
-                          return oldBox;
-                        return newBox;
-                      }}
-                    />
-                  )}
-                </Layer>
-              </Stage>
-            </div>
-          </YStack>
-        </Card>
+                    {showTransformer && (
+                      <Transformer
+                        ref={transformerRef}
+                        enabledAnchors={
+                          disableScale
+                            ? []
+                            : [
+                                "top-left",
+                                "top-center",
+                                "top-right",
+                                "middle-right",
+                                "bottom-right",
+                                "bottom-center",
+                                "bottom-left",
+                                "middle-left",
+                              ]
+                        }
+                        resizeEnabled={!disableScale}
+                        boundBoxFunc={(oldBox, newBox) => {
+                          if (newBox.width < 20 || newBox.height < 20)
+                            return oldBox;
+                          return newBox;
+                        }}
+                      />
+                    )}
+                  </Layer>
+                </Stage>
+              </div>
+            </YStack>
+          </Card>
+        </YStack>
 
-        {/* SIDEBAR DEL CARRITO */}
         {shouldShowSidebar && (
           <YStack
             bw={2}
@@ -976,7 +974,6 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
                 </Tabs.Content>
               </ScrollView>
 
-              {/* FIX: BOTÓN INTELIGENTE DE CONFIRMAR/ACTUALIZAR */}
               <Button
                 m={"$3"}
                 backgroundImage="linear-gradient(to right, var(--brandMain), var(--orange500))"
@@ -998,7 +995,7 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
                       tablegroup_id: currentTargetGroupId,
                       items: itemsToSync,
                     }).unwrap();
-                    setSelectedIds([]); // Opcional: Cerrar el panel tras guardar
+                    setSelectedIds([]);
                   }
                 }}
               >
