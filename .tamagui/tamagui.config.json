@@ -36396,6 +36396,7 @@
         "green700": "#008236",
         "green100": "#dcfce7",
         "red700": "#c10007",
+        "red500": "#f44336",
         "red100": "#ffe2e2",
         "buttonGreen": "#2ecc71",
         "buttonRed": "#fb2c36",
@@ -36429,6 +36430,7 @@
         "green700": "#008236",
         "green100": "#dcfce7",
         "red700": "#c10007",
+        "red500": "#f44336",
         "red100": "#ffe2e2",
         "buttonGreen": "#2ecc71",
         "buttonRed": "#fb2c36",
@@ -36559,6 +36561,13 @@
           "name": "c-red700",
           "val": "#c10007",
           "variable": "var(--c-red700)"
+        },
+        "red500": {
+          "isVar": true,
+          "key": "$red500",
+          "name": "c-red500",
+          "val": "#f44336",
+          "variable": "var(--c-red500)"
         },
         "red100": {
           "isVar": true,
@@ -37562,6 +37571,13 @@
         "name": "c-red100",
         "val": "#ffe2e2",
         "variable": "var(--c-red100)"
+      },
+      "$color.red500": {
+        "isVar": true,
+        "key": "$red500",
+        "name": "c-red500",
+        "val": "#f44336",
+        "variable": "var(--c-red500)"
       },
       "$color.red700": {
         "isVar": true,

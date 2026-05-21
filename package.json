@@ -16,8 +16,10 @@
     "@tamagui/shorthands": "^1.126.12",
     "@tamagui/toast": "^1.126.12",
     "@tanstack/react-form": "^1.29.1",
+    "konva": "^10.3.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
+    "react-konva": "^19.2.4",
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.14.2",
     "tamagui": "^1.126.12"

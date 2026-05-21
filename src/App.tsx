@@ -7,6 +7,7 @@ import { UsersView } from './features/users/Users';
 import { MenuView } from './features/menu/Menu';
 
 import type { JSX } from 'react';
+import { FloorView } from './features/floor/Floor';
 
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
   const token = useAppSelector((state) => state.auth.token);
@@ -33,6 +34,7 @@ export default function App() {
           <Route index element={<Navigate to="/menu" replace />} />
           <Route path="users" element={<UsersView />} />
           <Route path="menu" element={<MenuView />} />
+          <Route path="floorplan" element={<FloorView/>} />
         </Route>
         <Route path="*" element={<Navigate to="/menu" replace />} />
       </Routes>

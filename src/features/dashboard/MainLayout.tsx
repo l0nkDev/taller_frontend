@@ -8,9 +8,7 @@ import {
   ShoppingCart,
   MenuSquare,
   Users,
-  Moon,
   User,
-  TrendingUp,
 } from "@tamagui/lucide-icons";
 
 const SidebarItem = ({
@@ -91,23 +89,6 @@ export default function MainLayout() {
         <XStack ai="center" gap="$4">
           <Button
             size="$3"
-            bg="linear-gradient(to right, var(--brandMain), var(--orange500))"
-            icon={<TrendingUp size={16} color="white" />}
-            bw={0}
-          >
-            <Text color="white" fos="$3" fontWeight="bold">
-              Predicciones IA
-            </Text>
-          </Button>
-          <Button
-            size="$3"
-            circular
-            bg="$amber600"
-            bw={0}
-            icon={<Moon size={18} color="white" />}
-          />
-          <Button
-            size="$3"
             bg="transparent"
             bw={1}
             boc="$amber200"
@@ -123,7 +104,7 @@ export default function MainLayout() {
       <XStack f={1}>
         <YStack w={100} px="$2" py="$4" gap="$2">
           <SidebarItem
-            path="floorplan"
+            path="/floorplan"
             icon={LayoutGrid}
             label="Plano de piso"
           />
@@ -152,10 +133,9 @@ export default function MainLayout() {
           shadowOffset={{ width: -2, height: -2 }}
           shadowOpacity={0.1}
           shadowRadius={10}
+          overflow="hidden"
         >
-          <ScrollView showsVerticalScrollIndicator={false}>
             <Outlet />
-          </ScrollView>
         </YStack>
       </XStack>
     </YStack>

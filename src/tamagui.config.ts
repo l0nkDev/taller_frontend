@@ -19,6 +19,7 @@ const color = {
   green700: '#008236',
   green100: '#dcfce7',
   red700: '#c10007',
+  red500: '#f44336',
   red100: '#ffe2e2',
   buttonGreen: '#2ecc71',
   buttonRed: '#fb2c36',
