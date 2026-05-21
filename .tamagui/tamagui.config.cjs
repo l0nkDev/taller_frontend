@@ -1852,10 +1852,14 @@ var color3 = {
   gray600: "#4b5563",
   gray200: "#e5e7eb",
   green700: "#008236",
+  green600: "#43A047",
+  green500: "#22c55e",
   green100: "#dcfce7",
   red700: "#c10007",
   red500: "#f44336",
   red100: "#ffe2e2",
+  blue500: "#3b82f6",
+  cyan500: "#06b6d4",
   buttonGreen: "#2ecc71",
   buttonRed: "#fb2c36"
 };

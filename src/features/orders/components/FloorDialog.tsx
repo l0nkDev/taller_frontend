@@ -3,20 +3,6 @@ import { Button, Dialog, XStack, YStack, Text, View, Input } from "tamagui";
 import { useState } from "react";
 import { useForm } from "@tanstack/react-form";
 import { floorApi, FloorRead } from "../../../api/floorApi";
-import { Skeleton } from "../../../components/Skeleton";
-
-export const PlaceholderFloorDialog = () => 
-          (<Button
-            p="$4"
-            bw={2}
-            boc={"$cardBorder"}
-            bg={"$cardBg"}
-            br="$5"
-            ai={"center"}
-            jc={"space-between"}
-          >
-            <Skeleton width={70} height={16} shape="rectangular" borderRadius="$4" />
-          </Button>)
 
 export function FloorDialog({
   floor,

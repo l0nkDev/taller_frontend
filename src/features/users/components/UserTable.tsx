@@ -1,10 +1,17 @@
-import { Search, ChevronDown, Shield, User as UserIcon, ChefHat } from "@tamagui/lucide-icons";
+import {
+  Search,
+  ChevronDown,
+  Shield,
+  User as UserIcon,
+  ChefHat,
+} from "@tamagui/lucide-icons";
 import { XStack, YStack, Select, Circle, Text } from "tamagui";
 import { UserDialog } from "./UserDialog";
 import { useGetUsersQuery } from "../../../api/usersApi";
 import { useState } from "react";
 import { Input } from "../../../components/Input";
 import { DeleteUserDialog } from "./DeleteUserDialog";
+import { Skeleton } from "../../../components/Skeleton";
 
 const RoleBadge = ({ role }: { role: string }) => {
   const isAdmin = role === "admin";
@@ -51,11 +58,43 @@ const StatusBadge = ({ isActive }: { isActive: boolean }) => (
   </XStack>
 );
 
+const PlaceholderEntry = ({ isLast }: { isLast?: boolean }) => (
+  <XStack
+    px="$5"
+    py="$4"
+    ai="center"
+    borderBottomWidth={isLast ? 0 : 1}
+    boc="$cardBorder"
+    hoverStyle={{ bg: "$bgGradientStart" }}
+  >
+    <XStack f={2} fb={0} ai="center" gap="$3" overflow="hidden" pr="$3">
+      <Circle size={40} bg="$amber50" bw={1} boc="$amber200">
+        <UserIcon size={20} color="$brandMain" />
+      </Circle>
+      <YStack f={1}>
+        <Skeleton w={40} h={16} />
+
+        <Skeleton w={40} h={16} />
+      </YStack>
+    </XStack>
+    <XStack f={2} fb={0} ai="center" gap="$3">
+      <Skeleton w={40} h={16} />
+    </XStack>
+    <XStack f={1} fb={0}>
+      <Skeleton w={40} h={16} />
+    </XStack>
+    <XStack f={1} fb={0}>
+      <StatusBadge isActive />
+    </XStack>
+    <XStack f={0.5} fb={0} jc="center" gap="$2" />
+  </XStack>
+);
+
 export function UserTable() {
-  const { data } = useGetUsersQuery();
+  const { data, isFetching, isError } = useGetUsersQuery();
   const [searchArg, setSearchArg] = useState("");
   const [roleArg, setRoleArg] = useState("any");
-  
+
   return (
     <>
       <XStack
@@ -179,7 +218,16 @@ export function UserTable() {
           </Text>
         </XStack>
         <YStack>
-          {data &&
+          {isFetching ? (
+            <>
+              <PlaceholderEntry />
+              <PlaceholderEntry />
+              <PlaceholderEntry />
+              <PlaceholderEntry />
+              <PlaceholderEntry isLast />
+            </>
+          ) : (
+            data &&
             data
               .filter(
                 (user) =>
@@ -235,12 +283,17 @@ export function UserTable() {
                   <XStack f={1} fb={0}>
                     <StatusBadge isActive={user.is_active} />
                   </XStack>
-                  {user.is_active ? <XStack f={0.5} fb={0} jc="center" gap="$2">
-                    <UserDialog editing={user}/>
-                    <DeleteUserDialog userId={user.id}/>
-                  </XStack>: <XStack f={0.5} fb={0} jc="center" gap="$2"/>}
+                  {user.is_active ? (
+                    <XStack f={0.5} fb={0} jc="center" gap="$2">
+                      <UserDialog editing={user} />
+                      <DeleteUserDialog userId={user.id} />
+                    </XStack>
+                  ) : (
+                    <XStack f={0.5} fb={0} jc="center" gap="$2" />
+                  )}
                 </XStack>
-              ))}
+              ))
+          )}
         </YStack>
       </YStack>
     </>

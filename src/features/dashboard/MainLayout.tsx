@@ -1,5 +1,5 @@
 import { ElementType } from "react";
-import { YStack, XStack, Button, Text, ScrollView } from "tamagui";
+import { YStack, XStack, Button, Text } from "tamagui";
 import { useAppDispatch } from "../../store/hooks";
 import { logout } from "../../store/authSlice";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";

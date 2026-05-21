@@ -36394,10 +36394,14 @@
         "gray600": "#4b5563",
         "gray200": "#e5e7eb",
         "green700": "#008236",
+        "green600": "#43A047",
+        "green500": "#22c55e",
         "green100": "#dcfce7",
         "red700": "#c10007",
         "red500": "#f44336",
         "red100": "#ffe2e2",
+        "blue500": "#3b82f6",
+        "cyan500": "#06b6d4",
         "buttonGreen": "#2ecc71",
         "buttonRed": "#fb2c36",
         "background": "#1a1a1a",
@@ -36428,10 +36432,14 @@
         "gray600": "#4b5563",
         "gray200": "#e5e7eb",
         "green700": "#008236",
+        "green600": "#43A047",
+        "green500": "#22c55e",
         "green100": "#dcfce7",
         "red700": "#c10007",
         "red500": "#f44336",
         "red100": "#ffe2e2",
+        "blue500": "#3b82f6",
+        "cyan500": "#06b6d4",
         "buttonGreen": "#2ecc71",
         "buttonRed": "#fb2c36",
         "background": "#ffffff",
@@ -36548,6 +36556,20 @@
           "val": "#008236",
           "variable": "var(--c-green700)"
         },
+        "green600": {
+          "isVar": true,
+          "key": "$green600",
+          "name": "c-green600",
+          "val": "#43A047",
+          "variable": "var(--c-green600)"
+        },
+        "green500": {
+          "isVar": true,
+          "key": "$green500",
+          "name": "c-green500",
+          "val": "#22c55e",
+          "variable": "var(--c-green500)"
+        },
         "green100": {
           "isVar": true,
           "key": "$green100",
@@ -36575,6 +36597,20 @@
           "name": "c-red100",
           "val": "#ffe2e2",
           "variable": "var(--c-red100)"
+        },
+        "blue500": {
+          "isVar": true,
+          "key": "$blue500",
+          "name": "c-blue500",
+          "val": "#3b82f6",
+          "variable": "var(--c-blue500)"
+        },
+        "cyan500": {
+          "isVar": true,
+          "key": "$cyan500",
+          "name": "c-cyan500",
+          "val": "#06b6d4",
+          "variable": "var(--c-cyan500)"
         },
         "buttonGreen": {
           "isVar": true,
@@ -37495,6 +37531,13 @@
         "val": "#bb4d00",
         "variable": "var(--c-amber700)"
       },
+      "$color.blue500": {
+        "isVar": true,
+        "key": "$blue500",
+        "name": "c-blue500",
+        "val": "#3b82f6",
+        "variable": "var(--c-blue500)"
+      },
       "$color.buttonGreen": {
         "isVar": true,
         "key": "$buttonGreen",
@@ -37508,6 +37551,13 @@
         "name": "c-buttonRed",
         "val": "#fb2c36",
         "variable": "var(--c-buttonRed)"
+      },
+      "$color.cyan500": {
+        "isVar": true,
+        "key": "$cyan500",
+        "name": "c-cyan500",
+        "val": "#06b6d4",
+        "variable": "var(--c-cyan500)"
       },
       "$color.gray200": {
         "isVar": true,
@@ -37536,6 +37586,20 @@
         "name": "c-green100",
         "val": "#dcfce7",
         "variable": "var(--c-green100)"
+      },
+      "$color.green500": {
+        "isVar": true,
+        "key": "$green500",
+        "name": "c-green500",
+        "val": "#22c55e",
+        "variable": "var(--c-green500)"
+      },
+      "$color.green600": {
+        "isVar": true,
+        "key": "$green600",
+        "name": "c-green600",
+        "val": "#43A047",
+        "variable": "var(--c-green600)"
       },
       "$color.green700": {
         "isVar": true,

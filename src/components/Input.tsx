@@ -7,6 +7,7 @@ export const Input = styled(TamaguiInput, {
   bg: '$cardBg',
   outlineStyle: 'none',
   outlineColor: 'transparent',
+  placeholderTextColor: '$gray500',
   
   focusStyle: {
     boc: '$brandMain',
