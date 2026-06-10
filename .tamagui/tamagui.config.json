@@ -36391,8 +36391,11 @@
         "orange500": "#f97316",
         "white": "#ffffff",
         "gray800": "#1f2937",
+        "gray700": "#364153",
         "gray600": "#4b5563",
+        "gray500": "#6B7280",
         "gray200": "#e5e7eb",
+        "gray300": "#d1d5db",
         "green700": "#008236",
         "green600": "#43A047",
         "green500": "#22c55e",
@@ -36429,8 +36432,11 @@
         "orange500": "#f97316",
         "white": "#ffffff",
         "gray800": "#1f2937",
+        "gray700": "#364153",
         "gray600": "#4b5563",
+        "gray500": "#6B7280",
         "gray200": "#e5e7eb",
+        "gray300": "#d1d5db",
         "green700": "#008236",
         "green600": "#43A047",
         "green500": "#22c55e",
@@ -36535,6 +36541,13 @@
           "val": "#1f2937",
           "variable": "var(--c-gray800)"
         },
+        "gray700": {
+          "isVar": true,
+          "key": "$gray700",
+          "name": "c-gray700",
+          "val": "#364153",
+          "variable": "var(--c-gray700)"
+        },
         "gray600": {
           "isVar": true,
           "key": "$gray600",
@@ -36542,12 +36555,26 @@
           "val": "#4b5563",
           "variable": "var(--c-gray600)"
         },
+        "gray500": {
+          "isVar": true,
+          "key": "$gray500",
+          "name": "c-gray500",
+          "val": "#6B7280",
+          "variable": "var(--c-gray500)"
+        },
         "gray200": {
           "isVar": true,
           "key": "$gray200",
           "name": "c-gray200",
           "val": "#e5e7eb",
           "variable": "var(--c-gray200)"
+        },
+        "gray300": {
+          "isVar": true,
+          "key": "$gray300",
+          "name": "c-gray300",
+          "val": "#d1d5db",
+          "variable": "var(--c-gray300)"
         },
         "green700": {
           "isVar": true,
@@ -37566,12 +37593,33 @@
         "val": "#e5e7eb",
         "variable": "var(--c-gray200)"
       },
+      "$color.gray300": {
+        "isVar": true,
+        "key": "$gray300",
+        "name": "c-gray300",
+        "val": "#d1d5db",
+        "variable": "var(--c-gray300)"
+      },
+      "$color.gray500": {
+        "isVar": true,
+        "key": "$gray500",
+        "name": "c-gray500",
+        "val": "#6B7280",
+        "variable": "var(--c-gray500)"
+      },
       "$color.gray600": {
         "isVar": true,
         "key": "$gray600",
         "name": "c-gray600",
         "val": "#4b5563",
         "variable": "var(--c-gray600)"
+      },
+      "$color.gray700": {
+        "isVar": true,
+        "key": "$gray700",
+        "name": "c-gray700",
+        "val": "#364153",
+        "variable": "var(--c-gray700)"
       },
       "$color.gray800": {
         "isVar": true,

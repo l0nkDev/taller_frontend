@@ -6,6 +6,8 @@ import {
   Rect,
   Text as KText,
   Transformer,
+  Line,
+  Circle,
 } from "react-konva";
 import Konva from "konva";
 import { Node, NodeConfig } from "konva/lib/Node";
@@ -17,6 +19,9 @@ import {
   useCreateTableMutation,
   useDisbandGroupMutation,
   useCreateGroupMutation,
+  useCreateWallMutation,
+  useUpdateWallMutation,
+  useDeleteWallMutation,
   TableRead,
 } from "../../api/floorApi";
 import {
@@ -259,6 +264,12 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [inputMode, setInputMode] = useState<string>("manual");
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
+  const [isWallMode, setIsWallMode] = useState<boolean>(false);
+  const [newWallPoints, setNewWallPoints] = useState<number[] | null>(null);
+  const [createWall] = useCreateWallMutation();
+  const [updateWall] = useUpdateWallMutation();
+  const [deleteWall] = useDeleteWallMutation();
+  const [selectedWallId, setSelectedWallId] = useState<number | null>(null);
 
   const transformerRef = useRef<Konva.Transformer>(null);
   const stageRef = useRef<Konva.Stage>(null);
@@ -325,18 +336,31 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
   }, [selectedIds, stageScale, stagePos, floor, isEditMode]);
 
   useEffect(() => {
-    const handleResize = () => {
-      if (containerRef.current) {
+    if (!containerRef.current) return;
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (let entry of entries) {
         setDimensions({
-          width: containerRef.current.offsetWidth,
-          height: containerRef.current.offsetHeight,
+          width: entry.contentRect.width,
+          height: entry.contentRect.height,
         });
       }
-    };
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    });
+    resizeObserver.observe(containerRef.current);
+    return () => resizeObserver.disconnect();
   }, []);
+
+  const handleTransform = (e: Konva.KonvaEventObject<Event>) => {};
+
+  const gridSize = 20;
+  const snap = (v: number) => Math.round(v / gridSize) * gridSize;
+  const dragBoundFunc = (pos: {x: number, y: number}) => {
+    const logicalX = (pos.x - stagePos.x) / stageScale;
+    const logicalY = (pos.y - stagePos.y) / stageScale;
+    return {
+      x: snap(logicalX) * stageScale + stagePos.x,
+      y: snap(logicalY) * stageScale + stagePos.y,
+    };
+  };
 
   const handleWheel = (e: Konva.KonvaEventObject<WheelEvent>) => {
     e.evt.preventDefault();
@@ -362,7 +386,10 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
     e: Konva.KonvaEventObject<MouseEvent | TouchEvent>,
   ) => {
     const clickedOnEmpty = e.target === e.target.getStage();
-    if (clickedOnEmpty) setSelectedIds([]);
+    if (clickedOnEmpty) {
+      setSelectedIds([]);
+      setSelectedWallId(null);
+    }
   };
 
   const handleNodeSelect = (node: Konva.Node, isShiftPressed: boolean) => {
@@ -482,6 +509,7 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
         (absPos.y - stageRef.current!.y()) / stageRef.current!.scaleY();
       updateTable({
         tableId: tableId,
+        floor_id: floorId,
         current_group_id: targetTable.base_group_id,
         offset_x: logicalX,
         offset_y: logicalY,
@@ -554,7 +582,7 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
     return <ErrorScreen refresh={refetch}/>
 
   return (
-    <YStack f={1} gap={"$3"}>
+    <YStack f={1} gap="$4">
       <XStack f={1} gap={"$5"}>
         <YStack f={1} gap={"$3"}>
           <XStack
@@ -568,6 +596,37 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
             jc="space-between"
           >
             <XStack gap="$3" ai="center">
+              {isWallMode && (
+                <>
+                  <Button size="$3" onPress={() => setNewWallPoints(null)}>
+                    Cancelar Dibujo
+                  </Button>
+                  {selectedWallId && (
+                    <>
+                      <Button
+                        size="$3"
+                        onPress={() => {
+                          const w = floor?.walls.find(x => x.id === selectedWallId);
+                          if (w) updateWall({ wallId: w.id, floor_id: floorId, isDoor: !w.isDoor });
+                        }}
+                      >
+                        Alternar Puerta
+                      </Button>
+                      <Button
+                        size="$3"
+                        icon={Trash}
+                        theme="active"
+                        onPress={() => {
+                          deleteWall(selectedWallId);
+                          setSelectedWallId(null);
+                        }}
+                      >
+                        Eliminar
+                      </Button>
+                    </>
+                  )}
+                </>
+              )}
               {isEditMode && (
                 <>
                   <Button size="$3" icon={PlusSquare} onPress={handleAddTable}>
@@ -596,13 +655,29 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
             </XStack>
             <Button
               size="$3"
+              icon={isWallMode ? Lock : Pencil}
+              onPress={() => {
+                setIsWallMode(!isWallMode);
+                setIsEditMode(false);
+                setSelectedIds([]);
+                setSelectedWallId(null);
+                setNewWallPoints(null);
+              }}
+            >
+              {isWallMode ? "Terminar Paredes" : "Editar Paredes"}
+            </Button>
+            <Button
+              size="$3"
               icon={isEditMode ? Lock : Pencil}
               onPress={() => {
                 setIsEditMode(!isEditMode);
+                setIsWallMode(false);
                 setSelectedIds([]);
+                setSelectedWallId(null);
+                setNewWallPoints(null);
               }}
             >
-              {isEditMode ? "Bloquear Mapa" : "Editar Mapa"}
+              {isEditMode ? "Bloquear Mesas" : "Editar Mesas"}
             </Button>
           </XStack>
 
@@ -610,13 +685,19 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
             <YStack f={1} overflow="hidden">
               <div
                 ref={containerRef}
-                style={{ width: "100%", height: "100%", borderRadius: "$6" }}
+                style={{ 
+                  width: "100%", height: "100%", borderRadius: "$6",
+                  backgroundSize: `${gridSize * stageScale}px ${gridSize * stageScale}px`,
+                  backgroundPosition: `${stagePos.x}px ${stagePos.y}px`,
+                  backgroundImage: (isEditMode || isWallMode) ? `linear-gradient(to right, #e5e7eb 1px, transparent 1px), linear-gradient(to bottom, #e5e7eb 1px, transparent 1px)` : undefined,
+                  backgroundColor: '#ffffff'
+                }}
               >
                 <Stage
                   ref={stageRef}
                   width={dimensions.width}
                   height={dimensions.height}
-                  draggable={true}
+                  draggable={!isWallMode && !isEditMode}
                   scaleX={stageScale}
                   scaleY={stageScale}
                   x={stagePos.x}
@@ -626,11 +707,186 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
                     if (e.target === e.target.getStage())
                       setStagePos({ x: e.target.x(), y: e.target.y() });
                   }}
-                  onMouseDown={checkDeselect}
+                  onMouseDown={(e) => {
+                    checkDeselect(e);
+                    if (isWallMode) {
+                      const pos = e.target.getStage()?.getPointerPosition();
+                      if (pos) {
+                        const logicalX = snap((pos.x - stagePos.x) / stageScale);
+                        const logicalY = snap((pos.y - stagePos.y) / stageScale);
+                        if (!newWallPoints) {
+                          if (e.target === e.target.getStage()) {
+                            setNewWallPoints([logicalX, logicalY, logicalX, logicalY]);
+                          }
+                        } else {
+                          createWall({
+                            floor_id: floorId,
+                            x1: newWallPoints[0],
+                            y1: newWallPoints[1],
+                            x2: logicalX,
+                            y2: logicalY,
+                            isDoor: false
+                          });
+                          setNewWallPoints([logicalX, logicalY, logicalX, logicalY]);
+                        }
+                      }
+                    }
+                  }}
+                  onMouseMove={(e) => {
+                    if (isWallMode && newWallPoints) {
+                      const pos = e.target.getStage()?.getPointerPosition();
+                      if (pos) {
+                        const logicalX = snap((pos.x - stagePos.x) / stageScale);
+                        const logicalY = snap((pos.y - stagePos.y) / stageScale);
+                        setNewWallPoints([newWallPoints[0], newWallPoints[1], logicalX, logicalY]);
+                      }
+                    }
+                  }}
                   onTouchStart={checkDeselect}
-                  style={{ cursor: "grab" }}
+                  style={{ cursor: isWallMode ? "crosshair" : "grab" }}
                 >
                   <Layer>
+                    {floor.walls?.map(wall => (
+                      <Group key={`wall-${wall.id}`}>
+                        <Line
+                          id={`wall-line-${wall.id}`}
+                          points={[wall.x1, wall.y1, wall.x2, wall.y2]}
+                          stroke={wall.isDoor ? "#f59e0b" : "#1f2937"}
+                          strokeWidth={8}
+                          hitStrokeWidth={20}
+                          lineCap="round"
+                          onClick={(e) => {
+                            if (isWallMode) {
+                              e.cancelBubble = true;
+                              setSelectedWallId(wall.id);
+                            }
+                          }}
+                          onDragStart={(e) => {
+                            if (isWallMode && e.target instanceof Konva.Line) {
+                              e.cancelBubble = true;
+                              e.target.stopDrag();
+                              // Split wall at click
+                              const pos = e.target.getStage()?.getPointerPosition();
+                              if (pos) {
+                                const logicalX = snap((pos.x - stagePos.x) / stageScale);
+                                const logicalY = snap((pos.y - stagePos.y) / stageScale);
+                                
+                                // Update this wall to end at logicalX, logicalY
+                                updateWall({ wallId: wall.id, floor_id: floorId, x2: logicalX, y2: logicalY });
+                                
+                                // Create new wall from logicalX, logicalY to old x2, y2
+                                createWall({
+                                  floor_id: floorId,
+                                  x1: logicalX,
+                                  y1: logicalY,
+                                  x2: wall.x2,
+                                  y2: wall.y2,
+                                  isDoor: wall.isDoor
+                                });
+                              }
+                            }
+                          }}
+                          draggable={isWallMode}
+                        />
+                        {isWallMode && (
+                          <>
+                            <Circle
+                              id={`wall-circle-start-${wall.id}`}
+                              x={wall.x1}
+                              y={wall.y1}
+                              radius={6}
+                              fill="#3b82f6"
+                              draggable
+                              dragBoundFunc={dragBoundFunc}
+                              onDragMove={(e) => {
+                                e.cancelBubble = true;
+                                const pos = { x: e.target.x(), y: e.target.y() };
+                                e.target.getStage()?.findOne(`#wall-line-${wall.id}`)?.setAttr('points', [pos.x, pos.y, wall.x2, wall.y2]);
+                                floor.walls?.forEach(w => {
+                                  if (w.id !== wall.id) {
+                                    if (Math.abs(w.x1 - wall.x1) < 15 && Math.abs(w.y1 - wall.y1) < 15) {
+                                       e.target.getStage()?.findOne(`#wall-line-${w.id}`)?.setAttr('points', [pos.x, pos.y, w.x2, w.y2]);
+                                       e.target.getStage()?.findOne(`#wall-circle-start-${w.id}`)?.position(pos);
+                                    }
+                                    if (Math.abs(w.x2 - wall.x1) < 15 && Math.abs(w.y2 - wall.y1) < 15) {
+                                       e.target.getStage()?.findOne(`#wall-line-${w.id}`)?.setAttr('points', [w.x1, w.y1, pos.x, pos.y]);
+                                       e.target.getStage()?.findOne(`#wall-circle-end-${w.id}`)?.position(pos);
+                                    }
+                                  }
+                                });
+                              }}
+                              onDragEnd={(e) => {
+                                e.cancelBubble = true;
+                                const pos = { x: e.target.x(), y: e.target.y() };
+                                updateWall({ wallId: wall.id, floor_id: floorId, x1: pos.x, y1: pos.y });
+                                floor.walls?.forEach(w => {
+                                  if (w.id !== wall.id) {
+                                    if (Math.abs(w.x1 - wall.x1) < 15 && Math.abs(w.y1 - wall.y1) < 15) {
+                                       updateWall({ wallId: w.id, floor_id: floorId, x1: pos.x, y1: pos.y });
+                                    }
+                                    if (Math.abs(w.x2 - wall.x1) < 15 && Math.abs(w.y2 - wall.y1) < 15) {
+                                       updateWall({ wallId: w.id, floor_id: floorId, x2: pos.x, y2: pos.y });
+                                    }
+                                  }
+                                });
+                              }}
+                            />
+                            <Circle
+                              id={`wall-circle-end-${wall.id}`}
+                              x={wall.x2}
+                              y={wall.y2}
+                              radius={6}
+                              fill="#3b82f6"
+                              draggable
+                              dragBoundFunc={dragBoundFunc}
+                              onDragMove={(e) => {
+                                e.cancelBubble = true;
+                                const pos = { x: e.target.x(), y: e.target.y() };
+                                e.target.getStage()?.findOne(`#wall-line-${wall.id}`)?.setAttr('points', [wall.x1, wall.y1, pos.x, pos.y]);
+                                floor.walls?.forEach(w => {
+                                  if (w.id !== wall.id) {
+                                    if (Math.abs(w.x1 - wall.x2) < 15 && Math.abs(w.y1 - wall.y2) < 15) {
+                                       e.target.getStage()?.findOne(`#wall-line-${w.id}`)?.setAttr('points', [pos.x, pos.y, w.x2, w.y2]);
+                                       e.target.getStage()?.findOne(`#wall-circle-start-${w.id}`)?.position(pos);
+                                    }
+                                    if (Math.abs(w.x2 - wall.x2) < 15 && Math.abs(w.y2 - wall.y2) < 15) {
+                                       e.target.getStage()?.findOne(`#wall-line-${w.id}`)?.setAttr('points', [w.x1, w.y1, pos.x, pos.y]);
+                                       e.target.getStage()?.findOne(`#wall-circle-end-${w.id}`)?.position(pos);
+                                    }
+                                  }
+                                });
+                              }}
+                              onDragEnd={(e) => {
+                                e.cancelBubble = true;
+                                const pos = { x: e.target.x(), y: e.target.y() };
+                                updateWall({ wallId: wall.id, floor_id: floorId, x2: pos.x, y2: pos.y });
+                                floor.walls?.forEach(w => {
+                                  if (w.id !== wall.id) {
+                                    if (Math.abs(w.x1 - wall.x2) < 15 && Math.abs(w.y1 - wall.y2) < 15) {
+                                       updateWall({ wallId: w.id, floor_id: floorId, x1: pos.x, y1: pos.y });
+                                    }
+                                    if (Math.abs(w.x2 - wall.x2) < 15 && Math.abs(w.y2 - wall.y2) < 15) {
+                                       updateWall({ wallId: w.id, floor_id: floorId, x2: pos.x, y2: pos.y });
+                                    }
+                                  }
+                                });
+                              }}
+                            />
+                          </>
+                        )}
+                      </Group>
+                    ))}
+                    
+                    {newWallPoints && (
+                      <Line
+                        points={newWallPoints}
+                        stroke="#9ca3af"
+                        strokeWidth={8}
+                        lineCap="round"
+                        dash={[10, 10]}
+                        listening={false}
+                      />
+                    )}
                     {floor.table_groups?.map((group) => {
                       const groupId = `group-${group.id}`;
                       const groupHasActiveOrder = activeOrders?.some(
@@ -644,6 +900,7 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
                           y={group.pos_y}
                           rotation={group.rotation}
                           draggable={isEditMode}
+                          dragBoundFunc={dragBoundFunc}
                           onClick={(e) => {
                             e.cancelBubble = true;
                             handleNodeSelect(e.currentTarget, e.evt.shiftKey);
@@ -653,6 +910,7 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
                             e.cancelBubble = true;
                             updateGroup({
                               groupId: group.id,
+                              floor_id: floorId,
                               pos_x: e.target.x(),
                               pos_y: e.target.y(),
                             });
@@ -666,22 +924,33 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
                             node.scaleY(1);
                             updateGroup({
                               groupId: group.id,
+                              floor_id: floorId,
                               pos_x: node.x(),
                               pos_y: node.y(),
                               rotation: node.rotation(),
                             });
                             if (group.current_tables.length === 1) {
                               const innerTable = group.current_tables[0];
-                              const newWidth = Math.max(
+                              const newWidth = snap(Math.max(
                                 20,
                                 Math.abs((innerTable.width || 60) * scaleX),
-                              );
-                              const newHeight = Math.max(
+                              ));
+                              const newHeight = snap(Math.max(
                                 20,
                                 Math.abs((innerTable.height || 60) * scaleY),
-                              );
+                              ));
+                              
+                              const rectNode = e.target.getStage()?.findOne(`#table-${innerTable.id}`);
+                              if (rectNode) {
+                                rectNode.setAttr('width', newWidth);
+                                rectNode.setAttr('height', newHeight);
+                                rectNode.setAttr('offsetX', newWidth / 2);
+                                rectNode.setAttr('offsetY', newHeight / 2);
+                              }
+
                               updateTable({
                                 tableId: innerTable.id,
+                                floor_id: floorId,
                                 width: newWidth,
                                 height: newHeight,
                               });

@@ -21,10 +21,21 @@ export interface TableGroupRead {
   current_tables: TableRead[];
 }
 
+export interface WallRead {
+  id: number;
+  floor_id: number;
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  isDoor: boolean;
+}
+
 export interface FloorRead {
   id: number;
   name: string;
   table_groups: TableGroupRead[];
+  walls: WallRead[];
 }
 
 export const floorApi = baseApi.injectEndpoints({
@@ -113,6 +124,20 @@ export const floorApi = baseApi.injectEndpoints({
                   addOrOverwriteGroup(incomingGroup);
                   break;
                 }
+                case "create_wall":
+                  if (!draft.walls) draft.walls = [];
+                  draft.walls.push(data.wall);
+                  break;
+                case "update_wall": {
+                  if (!draft.walls) draft.walls = [];
+                  const idx = draft.walls.findIndex(w => w.id === data.wall.id);
+                  if (idx !== -1) draft.walls[idx] = data.wall;
+                  break;
+                }
+                case "delete_wall":
+                  if (!draft.walls) draft.walls = [];
+                  draft.walls = draft.walls.filter(w => w.id !== data.wall_id);
+                  break;
               }
             });
           };
@@ -128,6 +153,7 @@ export const floorApi = baseApi.injectEndpoints({
       void,
       {
         tableId: number;
+        floor_id: number;
         offset_x?: number;
         offset_y?: number;
         rotation?: number;
@@ -136,11 +162,22 @@ export const floorApi = baseApi.injectEndpoints({
         current_group_id?: number;
       }
     >({
-      query: ({ tableId, ...patch }) => ({
+      query: ({ tableId, floor_id, ...patch }) => ({
         url: `/editor/tables/${tableId}`,
         method: "PATCH",
         body: patch,
       }),
+      async onQueryStarted({ tableId, floor_id, ...patch }, { dispatch, queryFulfilled }) {
+        const patchResult = dispatch(
+          floorApi.util.updateQueryData('getFloorPlan', floor_id, (draft) => {
+            for (const group of draft.table_groups) {
+              const table = group.current_tables.find(t => t.id === tableId);
+              if (table) Object.assign(table, patch);
+            }
+          })
+        );
+        try { await queryFulfilled; } catch { patchResult.undo(); }
+      }
     }),
     createTable: builder.mutation<
       void,
@@ -164,13 +201,22 @@ export const floorApi = baseApi.injectEndpoints({
 
     updateGroup: builder.mutation<
       void,
-      { groupId: number; pos_x?: number; pos_y?: number; rotation?: number }
+      { groupId: number; floor_id: number; pos_x?: number; pos_y?: number; rotation?: number }
     >({
-      query: ({ groupId, ...patch }) => ({
+      query: ({ groupId, floor_id, ...patch }) => ({
         url: `/editor/tablegroups/${groupId}`,
         method: "PATCH",
         body: patch,
       }),
+      async onQueryStarted({ groupId, floor_id, ...patch }, { dispatch, queryFulfilled }) {
+        const patchResult = dispatch(
+          floorApi.util.updateQueryData('getFloorPlan', floor_id, (draft) => {
+            const group = draft.table_groups.find(g => g.id === groupId);
+            if (group) Object.assign(group, patch);
+          })
+        );
+        try { await queryFulfilled; } catch { patchResult.undo(); }
+      }
     }),
     disbandGroup: builder.mutation<void, number>({
       query: (groupId) => ({
@@ -186,6 +232,56 @@ export const floorApi = baseApi.injectEndpoints({
         body,
       }),
     }),
+    createWall: builder.mutation<WallRead, { floor_id: number; x1: number; y1: number; x2: number; y2: number; isDoor?: boolean }>({
+      query: (body) => ({
+        url: `/editor/walls`,
+        method: 'POST',
+        body,
+      }),
+      async onQueryStarted(body, { dispatch, queryFulfilled }) {
+        const tempId = -Date.now();
+        const patchResult = dispatch(
+          floorApi.util.updateQueryData('getFloorPlan', body.floor_id, (draft) => {
+            if (!draft.walls) draft.walls = [];
+            draft.walls.push({ id: tempId, ...body, isDoor: body.isDoor || false });
+          })
+        );
+        try {
+          const { data } = await queryFulfilled;
+          dispatch(
+            floorApi.util.updateQueryData('getFloorPlan', body.floor_id, (draft) => {
+              const idx = draft.walls.findIndex(w => w.id === tempId);
+              if (idx !== -1) draft.walls[idx] = data;
+            })
+          );
+        } catch {
+          patchResult.undo();
+        }
+      }
+    }),
+    updateWall: builder.mutation<void, { wallId: number; floor_id: number; x1?: number; y1?: number; x2?: number; y2?: number; isDoor?: boolean }>({
+      query: ({ wallId, floor_id, ...patch }) => ({
+        url: `/editor/walls/${wallId}`,
+        method: "PATCH",
+        body: patch,
+      }),
+      async onQueryStarted({ wallId, floor_id, ...patch }, { dispatch, queryFulfilled }) {
+        const patchResult = dispatch(
+          floorApi.util.updateQueryData('getFloorPlan', floor_id, (draft) => {
+            if (!draft.walls) return;
+            const wall = draft.walls.find(w => w.id === wallId);
+            if (wall) Object.assign(wall, patch);
+          })
+        );
+        try { await queryFulfilled; } catch { patchResult.undo(); }
+      }
+    }),
+    deleteWall: builder.mutation<void, number>({
+      query: (wallId) => ({
+        url: `/editor/walls/${wallId}`,
+        method: "DELETE",
+      }),
+    }),
   }),
 });
 
@@ -199,4 +295,7 @@ export const {
   useCreateTableMutation,
   useDisbandGroupMutation,
   useCreateGroupMutation,
+  useCreateWallMutation,
+  useUpdateWallMutation,
+  useDeleteWallMutation,
 } = floorApi;
