@@ -338,7 +338,7 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
   useEffect(() => {
     if (!containerRef.current) return;
     const resizeObserver = new ResizeObserver((entries) => {
-      for (let entry of entries) {
+      for (const entry of entries) {
         setDimensions({
           width: entry.contentRect.width,
           height: entry.contentRect.height,
@@ -348,8 +348,6 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
     resizeObserver.observe(containerRef.current);
     return () => resizeObserver.disconnect();
   }, []);
-
-  const handleTransform = (e: Konva.KonvaEventObject<Event>) => {};
 
   const gridSize = 20;
   const snap = (v: number) => Math.round(v / gridSize) * gridSize;
@@ -615,7 +613,6 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
                       <Button
                         size="$3"
                         icon={Trash}
-                        theme="active"
                         onPress={() => {
                           deleteWall(selectedWallId);
                           setSelectedWallId(null);
