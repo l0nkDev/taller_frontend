@@ -9,6 +9,8 @@ import {
   MenuSquare,
   Users,
   User,
+  LineChart,
+  History,
 } from "@tamagui/lucide-icons";
 
 const SidebarItem = ({
@@ -122,6 +124,16 @@ export default function MainLayout() {
             path="/users"
             icon={Users}
             label="Usuarios"
+          />
+          <SidebarItem
+            path="/bi"
+            icon={LineChart}
+            label="Dashboard"
+          />
+          <SidebarItem
+            path="/history"
+            icon={History}
+            label="Historial"
           />
           <YStack f={1} />
         </YStack>

@@ -9,6 +9,8 @@ import { MenuView } from './features/menu/Menu';
 import type { JSX } from 'react';
 import { FloorView } from './features/floor/Floor';
 import { OrdersView } from './features/orders/Orders';
+import { BIView } from './features/bi/BI';
+import { SalesHistoryView } from './features/bi/SalesHistory';
 import './index.css'
 
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
@@ -38,6 +40,8 @@ export default function App() {
           <Route path="menu" element={<MenuView />} />
           <Route path="floorplan" element={<FloorView/>} />
           <Route path="orders" element={<OrdersView/>} />
+          <Route path="bi" element={<BIView />} />
+          <Route path="history" element={<SalesHistoryView />} />
         </Route>
         <Route path="*" element={<Navigate to="/menu" replace />} />
       </Routes>
