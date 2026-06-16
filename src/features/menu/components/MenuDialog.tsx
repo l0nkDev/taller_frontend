@@ -111,7 +111,7 @@ export function MenuDialog({ editing = null }: { editing: Dish | null }) {
           bw={2}
           boc={"$cardBorder"}
           p={0}
-          onPointerDownOutside={(event) => {
+          onPointerDownOutside={(event: any) => {
             event.preventDefault();
           }}
         >

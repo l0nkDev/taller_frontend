@@ -100,7 +100,7 @@ export function UserDialog({ editing = null }: { editing: User | null }) {
           bw={2}
           boc={"$cardBorder"}
           p={0}
-          onPointerDownOutside={(event) => {
+          onPointerDownOutside={(event: any) => {
             event.preventDefault();
           }}
         >

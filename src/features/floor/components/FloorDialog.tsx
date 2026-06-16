@@ -97,7 +97,7 @@ export function FloorDialog({
             bw={2}
             boc={"$cardBorder"}
             p={0}
-            onPointerDownOutside={(event) => {
+            onPointerDownOutside={(event: any) => {
               event.preventDefault();
             }}
           >

@@ -125,7 +125,7 @@ export function UserTable() {
             }}
             placeholder="Buscar..."
             value={searchArg}
-            onChangeText={(v) => setSearchArg(v.toLowerCase())}
+            onChangeText={(v: any) => setSearchArg(v.toLowerCase())}
           />
         </XStack>
         <YStack>

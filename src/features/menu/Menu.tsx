@@ -10,7 +10,7 @@ export function MenuView() {
   const [filter, setFilter] = useState(0);
 
   return (
-    <YStack p="$5">
+    <ScrollView p="$5" contentContainerStyle={{ pb: 100 }}>
       <XStack f={1} jc={"space-between"}>
         <YStack mb="$6">
           <H2 fos="$9" color="$primaryText" fontWeight={500}>
@@ -116,6 +116,6 @@ export function MenuView() {
             ) : null,
           )}
       </XStack>
-    </YStack>
+    </ScrollView>
   );
 }
