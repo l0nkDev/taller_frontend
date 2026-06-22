@@ -314,7 +314,7 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
     });
     resizeObserver.observe(containerRef.current);
     return () => resizeObserver.disconnect();
-  });
+  }, []);
 
   const handleAddTable = () => {
     const centerX = (dimensions.width / 2 - stagePos.x) / stageScale;
@@ -726,13 +726,26 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
                                 20,
                                 Math.abs((innerTable.height || 60) * scaleY),
                               ));
-                              
-                              const rectNode = e.target.getStage()?.findOne(`#table-${innerTable.id}`);
-                              if (rectNode) {
-                                rectNode.setAttr('width', newWidth);
-                                rectNode.setAttr('height', newHeight);
-                                rectNode.setAttr('offsetX', newWidth / 2);
-                                rectNode.setAttr('offsetY', newHeight / 2);
+                              const newOffsetX = (innerTable.offset_x || 0) * scaleX;
+                              const newOffsetY = (innerTable.offset_y || 0) * scaleY;
+
+                              const groupNode = e.target.getStage()?.findOne(`#table-${innerTable.id}`) as Konva.Group;
+                              if (groupNode && typeof groupNode.findOne === 'function') {
+                                groupNode.setAttr('width', newWidth);
+                                groupNode.setAttr('height', newHeight);
+                                groupNode.setAttr('x', newOffsetX);
+                                groupNode.setAttr('y', newOffsetY);
+                                
+                                const rect = groupNode.findOne('Rect');
+                                if (rect) {
+                                  rect.setAttr('width', newWidth);
+                                  rect.setAttr('height', newHeight);
+                                }
+                                const text = groupNode.findOne('Text');
+                                if (text) {
+                                  text.setAttr('width', newWidth);
+                                  text.setAttr('height', newHeight);
+                                }
                               }
 
                               updateTable({
@@ -762,6 +775,7 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
                     {showTransformer && (
                       <Transformer
                         ref={transformerRef}
+                        flipEnabled={false}
                         enabledAnchors={
                           disableScale
                             ? []
