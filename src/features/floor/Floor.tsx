@@ -243,7 +243,7 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
 
   const transformerRef = useRef<Konva.Transformer>(null);
   const stageRef = useRef<Konva.Stage>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerNode, setContainerNode] = useState<HTMLDivElement | null>(null);
   const lastSelectedRef = useRef<string | null>(null);
 
 
@@ -303,7 +303,7 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
   }, [selectedIds, stageScale, stagePos, floor, isEditMode]);
 
   useEffect(() => {
-    if (!containerRef.current) return;
+    if (!containerNode) return;
     const resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) {
         setDimensions({
@@ -312,9 +312,9 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
         });
       }
     });
-    resizeObserver.observe(containerRef.current);
+    resizeObserver.observe(containerNode);
     return () => resizeObserver.disconnect();
-  }, []);
+  }, [containerNode, setDimensions]);
 
   const handleAddTable = () => {
     const centerX = (dimensions.width / 2 - stagePos.x) / stageScale;
@@ -591,8 +591,9 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
           <Card bw={2} boc="$cardBorder" bg="$cardBg" br="$6" f={1}>
             <YStack f={1} overflow="hidden">
               <div
-                ref={containerRef}
+                ref={setContainerNode}
                 style={{ 
+                  flex: 1, display: "flex", flexDirection: "column",
                   width: "100%", height: "100%", borderRadius: "$6",
                   backgroundSize: `${snap(10) * stageScale}px ${snap(10) * stageScale}px`,
                   backgroundPosition: `${stagePos.x}px ${stagePos.y}px`,
