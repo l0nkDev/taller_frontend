@@ -64,7 +64,8 @@ import {
   Send,
   Blocks,
   RefreshCcw,
-Sparkles } from "@tamagui/lucide-icons";
+  Map,
+  Sparkles } from "@tamagui/lucide-icons";
 import { Dish, useGetDishesQuery } from "../../api/dishesApi";
 
 const statusMap: Record<string, { name: string; color: string }> = {
@@ -260,6 +261,114 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
   const [optState, setOptState] = useState<"idle" | "optimizing" | "preview">("idle");
   const [previewPositions, setPreviewPositions] = useState<Record<number, {x: number, y: number, rotation: number}>>({});
 
+  const [showHeatmap, setShowHeatmap] = useState(false);
+  const [heatmapData, setHeatmapData] = useState<{
+    minX: number, minY: number, cols: number, rows: number, CELL: number, heatmap: Int32Array, grid: Int8Array, maxVal: number
+  } | null>(null);
+
+  useEffect(() => {
+    if (!floor?.walls || floor.walls.length === 0) return;
+    const walls = floor.walls;
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    walls.forEach(w => {
+        minX = Math.min(minX, w.x1, w.x2);
+        maxX = Math.max(maxX, w.x1, w.x2);
+        minY = Math.min(minY, w.y1, w.y2);
+        maxY = Math.max(maxY, w.y1, w.y2);
+    });
+    if (minX === Infinity) return;
+
+    const CELL = 10;
+    const cols = Math.floor((maxX - minX) / CELL) + 1;
+    const rows = Math.floor((maxY - minY) / CELL) + 1;
+
+    const grid = new Int8Array(cols * rows);
+    const SET_GRID = (c: number, r: number, v: number) => { if(c>=0&&c<cols&&r>=0&&r<rows) grid[r*cols+c]=v; };
+    const doorCells = new Set<string>();
+
+    walls.forEach(w => {
+      const steps = Math.ceil(Math.sqrt(Math.pow(w.x2 - w.x1, 2) + Math.pow(w.y2 - w.y1, 2)) / (CELL / 2));
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const px = w.x1 + t * (w.x2 - w.x1);
+        const py = w.y1 + t * (w.y2 - w.y1);
+        const c = Math.floor((px - minX) / CELL);
+        const r = Math.floor((py - minY) / CELL);
+        const pad = 3;
+        for(let dr=-pad; dr<=pad; dr++) {
+            for(let dc=-pad; dc<=pad; dc++) {
+               SET_GRID(c+dc, r+dr, 1);
+               if (w.isDoor) doorCells.add(`${c+dc},${r+dr}`);
+            }
+        }
+      }
+    });
+
+    const heatmap = new Int32Array(cols * rows).fill(1000000);
+    const queue: {c: number, r: number, dist: number}[] = [];
+    for (const d of doorCells) {
+        const parts = d.split(',');
+        const c = parseInt(parts[0]), r = parseInt(parts[1]);
+        heatmap[r*cols+c] = 0;
+        queue.push({c, r, dist: 0});
+    }
+
+    let head = 0;
+    let maxVal = 0;
+    while(head < queue.length) {
+        const curr = queue[head++];
+        const dirs = [[0,1],[0,-1],[1,0],[-1,0]];
+        for (const dir of dirs) {
+            const nc = curr.c + dir[0];
+            const nr = curr.r + dir[1];
+            if (nc>=0&&nc<cols&&nr>=0&&nr<rows) {
+                if (grid[nr*cols+nc] === 1 && !doorCells.has(`${nc},${nr}`)) continue;
+                if (curr.dist + 1 < heatmap[nr*cols+nc]) {
+                    heatmap[nr*cols+nc] = curr.dist + 1;
+                    maxVal = Math.max(maxVal, curr.dist + 1);
+                    queue.push({c: nc, r: nr, dist: curr.dist + 1});
+                }
+            }
+        }
+    }
+
+    // Traffic Lanes Optimization
+    const doorCenters: {x: number, y: number}[] = [];
+    walls.forEach(w => {
+        if (w.isDoor) {
+            doorCenters.push({ x: (w.x1 + w.x2) / 2, y: (w.y1 + w.y2) / 2 });
+        }
+    });
+
+    const drawLane = (x1: number, y1: number, x2: number, y2: number) => {
+        const steps = Math.ceil(Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2)) / (CELL / 2));
+        for (let i = 0; i <= steps; i++) {
+            const t = i / steps;
+            const px = x1 + t * (x2 - x1);
+            const py = y1 + t * (y2 - y1);
+            const c = Math.floor((px - minX) / CELL);
+            const r = Math.floor((py - minY) / CELL);
+            const pad = 2; // 2 cells padding = 20px each side = 50px lane width total
+            for(let dr=-pad; dr<=pad; dr++) {
+                for(let dc=-pad; dc<=pad; dc++) {
+                   if (grid[(r+dr) * cols + (c+dc)] !== 1) {
+                       SET_GRID(c+dc, r+dr, 2);
+                   }
+                }
+            }
+        }
+    };
+
+    const centerX = (minX + maxX) / 2;
+    const centerY = (minY + maxY) / 2;
+    for (const door of doorCenters) {
+        drawLane(door.x, door.y, centerX, centerY);
+    }
+
+    setHeatmapData({ minX, minY, cols, rows, CELL, heatmap, grid, maxVal });
+
+  }, [floor?.walls]);
+
   useEffect(() => {
     if (optState === "preview") {
       setOptState("idle");
@@ -380,77 +489,12 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
   };
 
   const runOptimization = async () => {
-    if (!floor?.walls || floor.walls.length === 0) return;
+    if (!floor?.walls || floor.walls.length === 0 || !heatmapData) return;
     setOptState("optimizing");
     await new Promise(r => setTimeout(r, 100)); // allow UI to render 'Calculando...'
 
-    const walls = floor.walls;
     const groups = floor.table_groups || [];
-    
-    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-    walls.forEach(w => {
-        minX = Math.min(minX, w.x1, w.x2);
-        maxX = Math.max(maxX, w.x1, w.x2);
-        minY = Math.min(minY, w.y1, w.y2);
-        maxY = Math.max(maxY, w.y1, w.y2);
-    });
-    if (minX === Infinity) { setOptState("idle"); return; }
-
-    const CELL = 10;
-    const cols = Math.floor((maxX - minX) / CELL) + 1;
-    const rows = Math.floor((maxY - minY) / CELL) + 1;
-    
-    console.log(`Room bounds: minX=${minX}, maxX=${maxX}, minY=${minY}, maxY=${maxY}`);
-    console.log(`Grid size: ${cols}x${rows}`);
-
-    const grid = new Int8Array(cols * rows);
-    const SET_GRID = (c: number, r: number, v: number) => { if(c>=0&&c<cols&&r>=0&&r<rows) grid[r*cols+c]=v; };
-    
-    const doorCells = new Set<string>();
-
-    walls.forEach(w => {
-      const steps = Math.ceil(Math.sqrt(Math.pow(w.x2 - w.x1, 2) + Math.pow(w.y2 - w.y1, 2)) / (CELL / 2));
-      for (let i = 0; i <= steps; i++) {
-        const t = i / steps;
-        const px = w.x1 + t * (w.x2 - w.x1);
-        const py = w.y1 + t * (w.y2 - w.y1);
-        const c = Math.floor((px - minX) / CELL);
-        const r = Math.floor((py - minY) / CELL);
-        const pad = 3;
-        for(let dr=-pad; dr<=pad; dr++) {
-            for(let dc=-pad; dc<=pad; dc++) {
-               SET_GRID(c+dc, r+dr, 1);
-               if (w.isDoor) doorCells.add(`${c+dc},${r+dr}`);
-            }
-        }
-      }
-    });
-
-    const heatmap = new Int32Array(cols * rows).fill(1000000);
-    const queue: {c: number, r: number, dist: number}[] = [];
-    for (const d of doorCells) {
-        const parts = d.split(',');
-        const c = parseInt(parts[0]), r = parseInt(parts[1]);
-        heatmap[r*cols+c] = 0;
-        queue.push({c, r, dist: 0});
-    }
-
-    let head = 0;
-    while(head < queue.length) {
-        const curr = queue[head++];
-        const dirs = [[0,1],[0,-1],[1,0],[-1,0]];
-        for (const dir of dirs) {
-            const nc = curr.c + dir[0];
-            const nr = curr.r + dir[1];
-            if (nc>=0&&nc<cols&&nr>=0&&nr<rows) {
-                if (grid[nr*cols+nc] === 1 && !doorCells.has(`${nc},${nr}`)) continue;
-                if (curr.dist + 1 < heatmap[nr*cols+nc]) {
-                    heatmap[nr*cols+nc] = curr.dist + 1;
-                    queue.push({c: nc, r: nr, dist: curr.dist + 1});
-                }
-            }
-        }
-    }
+    const { minX, minY, cols, rows, CELL, heatmap, grid } = heatmapData;
 
     const sortedGroups = [...groups].sort((a: any,b: any) => b.current_tables.length - a.current_tables.length);
     const preview: Record<number, {x:number,y:number,rotation:number}> = {};
@@ -522,11 +566,18 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
 
                     let penalty = 0;
                     let heatSum = 0;
-                    for (const cell of cells) {
-                        if (LOCAL_GRID(cell.c, cell.r) === 1) {
-                            penalty += 100000;
+                    if (cells.length === 0) {
+                        penalty += 100000;
+                    } else {
+                        for (const cell of cells) {
+                            const val = LOCAL_GRID(cell.c, cell.r);
+                            if (val === 1) {
+                                penalty += 100000;
+                            } else if (val === 2) {
+                                heatSum += 500; // Soft constraint: huge penalty but won't crash the placement
+                            }
+                            heatSum += heatmap[cell.r*cols+cell.c];
                         }
-                        heatSum += heatmap[cell.r*cols+cell.c];
                     }
 
                     if (penalty === 0) {
@@ -733,7 +784,9 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
   ) => {
     const clickedOnEmpty = e.target === e.target.getStage();
     if (clickedOnEmpty) {
-      setSelectedIds([]);
+      if (isEditMode || isWallMode || optState !== "idle") {
+        setSelectedIds([]);
+      }
       setSelectedWallId(null);
     }
   };
@@ -898,7 +951,7 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
   if (isGroupSelected && isComplexGroup) btnUngroupText = "Desarmar Grupo";
   if (isSubSelectedTable) btnUngroupText = "Extraer de Grupo";
 
-  const shouldShowSidebar = selectedIds.length === 1 && !isSubSelectedTable;
+  const shouldShowSidebar = selectedIds.length === 1 && !isSubSelectedTable && !isEditMode && optState === "idle";
 
   let displayLabel = "";
   if (shouldShowSidebar) {
@@ -1024,6 +1077,13 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
                 }}
               >
                 {isEditMode ? "Bloquear Mesas" : "Editar Mesas"}
+              </Button>
+              <Button
+                size="$3"
+                icon={Map}
+                onPress={() => setShowHeatmap(!showHeatmap)}
+              >
+                {showHeatmap ? "Ocultar Heatmap" : "Ver Heatmap"}
               </Button>
               {optState === "preview" ? (
                 <>
@@ -1244,6 +1304,32 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
                         listening={false}
                       />
                     )}
+
+                    {(showHeatmap || optState !== "idle") && heatmapData && (
+                        <Group>
+                           {Array.from({ length: heatmapData.rows }).map((_, r) =>
+                              Array.from({ length: heatmapData.cols }).map((_, c) => {
+                                 const val = heatmapData.heatmap[r * heatmapData.cols + c];
+                                 if (val === 1000000) return null; // Unreachable
+                                 const ratio = val / heatmapData.maxVal;
+                                 const color = `hsl(${(1 - ratio) * 120}, 100%, 50%)`;
+                                 return (
+                                     <Rect
+                                        key={`${r}-${c}`}
+                                        x={heatmapData.minX + c * heatmapData.CELL}
+                                        y={heatmapData.minY + r * heatmapData.CELL}
+                                        width={heatmapData.CELL}
+                                        height={heatmapData.CELL}
+                                        fill={color}
+                                        opacity={0.4}
+                                        listening={false}
+                                     />
+                                 );
+                              })
+                           )}
+                        </Group>
+                    )}
+
                     {floor.table_groups?.map((group) => {
                       const groupId = `group-${group.id}`;
                       const groupHasActiveOrder = activeOrders?.some(
