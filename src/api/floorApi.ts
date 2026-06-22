@@ -184,7 +184,20 @@ export const floorApi = baseApi.injectEndpoints({
           floorApi.util.updateQueryData('getFloorPlan', floor_id, (draft) => {
             for (const group of draft.table_groups) {
               const table = group.current_tables.find(t => t.id === tableId);
-              if (table) Object.assign(table, patch);
+              if (table) {
+                if (group.current_tables.length === 1 && group.id === table.base_group_id) {
+                  if (patch.offset_x !== undefined) group.pos_x = patch.offset_x;
+                  if (patch.offset_y !== undefined) group.pos_y = patch.offset_y;
+                  if (patch.rotation !== undefined) group.rotation = patch.rotation;
+                  
+                  const { offset_x, offset_y, rotation, ...restPatch } = patch;
+                  Object.assign(table, restPatch);
+                  table.offset_x = 0;
+                  table.offset_y = 0;
+                } else {
+                  Object.assign(table, patch);
+                }
+              }
             }
           })
         );

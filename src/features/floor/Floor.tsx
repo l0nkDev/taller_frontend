@@ -709,13 +709,7 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
                             const scaleY = node.scaleY();
                             node.scaleX(1);
                             node.scaleY(1);
-                            updateGroup({
-                              groupId: group.id,
-                              floor_id: floorId,
-                              pos_x: node.x(),
-                              pos_y: node.y(),
-                              rotation: node.rotation(),
-                            });
+
                             if (group.current_tables.length === 1) {
                               const innerTable = group.current_tables[0];
                               const newWidth = snap(Math.max(
@@ -753,6 +747,17 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
                                 floor_id: floorId,
                                 width: newWidth,
                                 height: newHeight,
+                                offset_x: node.x(),
+                                offset_y: node.y(),
+                                rotation: node.rotation(),
+                              });
+                            } else {
+                              updateGroup({
+                                groupId: group.id,
+                                floor_id: floorId,
+                                pos_x: node.x(),
+                                pos_y: node.y(),
+                                rotation: node.rotation(),
                               });
                             }
                           }}
