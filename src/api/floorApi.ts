@@ -36,6 +36,18 @@ export interface FloorRead {
   name: string;
   table_groups: TableGroupRead[];
   walls: WallRead[];
+  capacity: number;
+}
+
+export interface ParsedOrderItem {
+  dish_id: number;
+  name: string;
+  quantity: number;
+}
+
+export interface AIOrderResponse {
+  transcription: string;
+  items: ParsedOrderItem[];
 }
 
 export const floorApi = baseApi.injectEndpoints({
@@ -282,6 +294,13 @@ export const floorApi = baseApi.injectEndpoints({
         method: "DELETE",
       }),
     }),
+    parseOrderAI: builder.mutation<AIOrderResponse, FormData>({
+      query: (formData) => ({
+        url: "/ai/parse-order",
+        method: "POST",
+        body: formData,
+      }),
+    }),
   }),
 });
 
@@ -298,4 +317,5 @@ export const {
   useCreateWallMutation,
   useUpdateWallMutation,
   useDeleteWallMutation,
+  useParseOrderAIMutation,
 } = floorApi;

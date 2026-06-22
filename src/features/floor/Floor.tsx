@@ -63,7 +63,7 @@ import {
   Send,
   Blocks,
   RefreshCcw,
-} from "@tamagui/lucide-icons";
+Sparkles } from "@tamagui/lucide-icons";
 import { Dish, useGetDishesQuery } from "../../api/dishesApi";
 
 const statusMap: Record<string, { name: string; color: string }> = {
@@ -248,6 +248,254 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const [stageScale, setStageScale] = useState(1);
   const [stagePos, setStagePos] = useState({ x: 0, y: 0 });
+  
+  const [optState, setOptState] = useState<"idle" | "optimizing" | "preview">("idle");
+  const [previewPositions, setPreviewPositions] = useState<Record<number, {x: number, y: number, rotation: number}>>({});
+
+  useEffect(() => {
+    if (optState === "preview") {
+      setOptState("idle");
+      setPreviewPositions({});
+    }
+  }, [floor?.table_groups, floor?.walls]);
+
+  const applyOptimization = async () => {
+      setOptState("optimizing");
+      try {
+          for (const [idStr, pos] of Object.entries(previewPositions)) {
+             await updateGroup({
+                 groupId: parseInt(idStr),
+                 floor_id: floorId,
+                 pos_x: pos.x,
+                 pos_y: pos.y,
+                 rotation: pos.rotation
+             }).unwrap();
+          }
+      } catch (e) {
+          console.error(e);
+      } finally {
+          setOptState("idle");
+          setPreviewPositions({});
+      }
+  };
+
+  const runOptimization = async () => {
+    if (!floor?.walls || floor.walls.length === 0) return;
+    setOptState("optimizing");
+    await new Promise(r => setTimeout(r, 100)); // allow UI to render 'Calculando...'
+
+    const walls = floor.walls;
+    const groups = floor.table_groups || [];
+    
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    walls.forEach(w => {
+        minX = Math.min(minX, w.x1, w.x2);
+        maxX = Math.max(maxX, w.x1, w.x2);
+        minY = Math.min(minY, w.y1, w.y2);
+        maxY = Math.max(maxY, w.y1, w.y2);
+    });
+    if (minX === Infinity) { setOptState("idle"); return; }
+
+    const CELL = 10;
+    const cols = Math.floor((maxX - minX) / CELL) + 1;
+    const rows = Math.floor((maxY - minY) / CELL) + 1;
+    
+    console.log(`Room bounds: minX=${minX}, maxX=${maxX}, minY=${minY}, maxY=${maxY}`);
+    console.log(`Grid size: ${cols}x${rows}`);
+
+    const grid = new Int8Array(cols * rows);
+    const SET_GRID = (c: number, r: number, v: number) => { if(c>=0&&c<cols&&r>=0&&r<rows) grid[r*cols+c]=v; };
+    
+    const doorCells = new Set<string>();
+
+    walls.forEach(w => {
+      const steps = Math.ceil(Math.sqrt(Math.pow(w.x2 - w.x1, 2) + Math.pow(w.y2 - w.y1, 2)) / (CELL / 2));
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const px = w.x1 + t * (w.x2 - w.x1);
+        const py = w.y1 + t * (w.y2 - w.y1);
+        const c = Math.floor((px - minX) / CELL);
+        const r = Math.floor((py - minY) / CELL);
+        const pad = 3;
+        for(let dr=-pad; dr<=pad; dr++) {
+            for(let dc=-pad; dc<=pad; dc++) {
+               SET_GRID(c+dc, r+dr, 1);
+               if (w.isDoor) doorCells.add(`${c+dc},${r+dr}`);
+            }
+        }
+      }
+    });
+
+    const heatmap = new Int32Array(cols * rows).fill(1000000);
+    const queue: {c: number, r: number, dist: number}[] = [];
+    for (const d of doorCells) {
+        const parts = d.split(',');
+        const c = parseInt(parts[0]), r = parseInt(parts[1]);
+        heatmap[r*cols+c] = 0;
+        queue.push({c, r, dist: 0});
+    }
+
+    let head = 0;
+    while(head < queue.length) {
+        const curr = queue[head++];
+        const dirs = [[0,1],[0,-1],[1,0],[-1,0]];
+        for (const dir of dirs) {
+            const nc = curr.c + dir[0];
+            const nr = curr.r + dir[1];
+            if (nc>=0&&nc<cols&&nr>=0&&nr<rows) {
+                if (grid[nr*cols+nc] === 1 && !doorCells.has(`${nc},${nr}`)) continue;
+                if (curr.dist + 1 < heatmap[nr*cols+nc]) {
+                    heatmap[nr*cols+nc] = curr.dist + 1;
+                    queue.push({c: nc, r: nr, dist: curr.dist + 1});
+                }
+            }
+        }
+    }
+
+    const sortedGroups = [...groups].sort((a: any,b: any) => b.current_tables.length - a.current_tables.length);
+    const preview: Record<number, {x:number,y:number,rotation:number}> = {};
+
+    let currentGrid = new Int8Array(grid);
+    const LOCAL_SET_GRID = (c: number, r: number, val: number) => { 
+        if(c>=0 && c<cols && r>=0 && r<rows) currentGrid[r * cols + c] = val; 
+    };
+    const LOCAL_GRID = (c: number, r: number) => {
+        if (c < 0 || c >= cols || r < 0 || r >= rows) return 1;
+        return currentGrid[r * cols + c];
+    };
+
+    for (const g of sortedGroups) {
+        let bestScore = -Infinity;
+        let bestX = g.pos_x;
+        let bestY = g.pos_y;
+        let bestRot = g.rotation || 0;
+
+        for (const rot of [0, 90, 180, 270]) {
+            for (let r = 2; r < rows - 2; r += 2) {
+                for (let c = 2; c < cols - 2; c += 2) {
+                    const px = minX + c * CELL;
+                    const py = minY + r * CELL;
+                    
+                    const cells: {c:number, r:number}[] = [];
+                    let maxR = 0;
+                    g.current_tables.forEach((t: any) => {
+                        const w = (t.width || 60) * (t.scaleX || 1);
+                        const h = (t.height || 60) * (t.scaleY || 1);
+                        const ox = t.offset_x || 0;
+                        const oy = t.offset_y || 0;
+                        const tRot = t.rotation || 0;
+                        const gRot = rot;
+                        const absTRot = (tRot + gRot) % 360;
+                        
+                        const rad = gRot * Math.PI / 180;
+                        const cos = Math.cos(rad);
+                        const sin = Math.sin(rad);
+                        const absTx = px + ox * cos - oy * sin;
+                        const absTy = py + ox * sin + oy * cos;
+                        
+                        const rrad = -absTRot * Math.PI / 180;
+                        const rcos = Math.cos(rrad);
+                        const rsin = Math.sin(rrad);
+
+                        const R = Math.sqrt(w*w + h*h) + 5;
+                        if (R > maxR) maxR = R;
+
+                        const startC = Math.floor((absTx - R - minX) / CELL);
+                        const endC = Math.floor((absTx + R - minX) / CELL);
+                        const startR = Math.floor((absTy - R - minY) / CELL);
+                        const endR = Math.floor((absTy + R - minY) / CELL);
+
+                        for(let rr=startR; rr<=endR; rr++) {
+                            for(let cc=startC; cc<=endC; cc++) {
+                                const cx = minX + cc * CELL;
+                                const cy = minY + rr * CELL;
+                                const lx = cx - absTx;
+                                const ly = cy - absTy;
+                                const locX = lx * rcos - ly * rsin;
+                                const locY = lx * rsin + ly * rcos;
+                                if (locX >= 0 && locX <= w && locY >= 0 && locY <= h) {
+                                    cells.push({c: cc, r: rr});
+                                }
+                            }
+                        }
+                    });
+
+                    let penalty = 0;
+                    let heatSum = 0;
+                    for (const cell of cells) {
+                        if (LOCAL_GRID(cell.c, cell.r) === 1) {
+                            penalty += 100000;
+                        }
+                        heatSum += heatmap[cell.r*cols+cell.c];
+                    }
+
+                    if (penalty === 0) {
+                        const score = -heatSum * 1000;
+                        if (score > bestScore) {
+                            bestScore = score;
+                            bestX = px;
+                            bestY = py;
+                            bestRot = rot;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (bestScore > -Infinity) {
+            preview[g.id] = {x: bestX, y: bestY, rotation: bestRot};
+            
+            const rot = bestRot;
+            g.current_tables.forEach((t: any) => {
+                const w = (t.width || 60) * (t.scaleX || 1);
+                const h = (t.height || 60) * (t.scaleY || 1);
+                const ox = t.offset_x || 0;
+                const oy = t.offset_y || 0;
+                const tRot = t.rotation || 0;
+                const gRot = rot;
+                const absTRot = (tRot + gRot) % 360;
+                
+                const rad = gRot * Math.PI / 180;
+                const cos = Math.cos(rad);
+                const sin = Math.sin(rad);
+                const absTx = bestX + ox * cos - oy * sin;
+                const absTy = bestY + ox * sin + oy * cos;
+                
+                const rrad = -absTRot * Math.PI / 180;
+                const rcos = Math.cos(rrad);
+                const rsin = Math.sin(rrad);
+
+                const R = Math.sqrt(w*w + h*h) + 5;
+                const startC = Math.floor((absTx - R - minX) / CELL);
+                const endC = Math.floor((absTx + R - minX) / CELL);
+                const startR = Math.floor((absTy - R - minY) / CELL);
+                const endR = Math.floor((absTy + R - minY) / CELL);
+
+                for(let rr=startR; rr<=endR; rr++) {
+                    for(let cc=startC; cc<=endC; cc++) {
+                        const cx = minX + cc * CELL;
+                        const cy = minY + rr * CELL;
+                        const lx = cx - absTx;
+                        const ly = cy - absTy;
+                        const locX = lx * rcos - ly * rsin;
+                        const locY = lx * rsin + ly * rcos;
+                        if (locX >= -20 && locX <= w + 20 && locY >= -20 && locY <= h + 20) { // 20px padding between tables
+                            LOCAL_SET_GRID(cc, rr, 1);
+                        }
+                    }
+                }
+            });
+            console.log(`✅ Table ${g.id} placed at (${bestX}, ${bestY}) with rot ${bestRot}. Score: ${bestScore}`);
+        } else {
+            console.warn(`❌ Table ${g.id} FAILED TO PLACE! Falling back to original. Groups size: ${g.current_tables.length}`);
+            preview[g.id] = {x: g.pos_x, y: g.pos_y, rotation: g.rotation || 0};
+        }
+    }
+    
+    console.log("=== FINAL PREVIEW ===", preview);
+    setPreviewPositions(preview);
+    setOptState("preview");
+  };
 
   const [updateTable] = useUpdateTableMutation();
   const [updateGroup] = useUpdateGroupMutation();
@@ -650,32 +898,44 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
                 </>
               )}
             </XStack>
-            <Button
-              size="$3"
-              icon={isWallMode ? Lock : Pencil}
-              onPress={() => {
-                setIsWallMode(!isWallMode);
-                setIsEditMode(false);
-                setSelectedIds([]);
-                setSelectedWallId(null);
-                setNewWallPoints(null);
-              }}
-            >
-              {isWallMode ? "Terminar Paredes" : "Editar Paredes"}
-            </Button>
-            <Button
-              size="$3"
-              icon={isEditMode ? Lock : Pencil}
-              onPress={() => {
-                setIsEditMode(!isEditMode);
-                setIsWallMode(false);
-                setSelectedIds([]);
-                setSelectedWallId(null);
-                setNewWallPoints(null);
-              }}
-            >
-              {isEditMode ? "Bloquear Mesas" : "Editar Mesas"}
-            </Button>
+            <XStack gap="$3" ai="center" flexWrap="wrap">
+              <Button
+                size="$3"
+                icon={isWallMode ? Lock : Pencil}
+                onPress={() => {
+                  setIsWallMode(!isWallMode);
+                  setIsEditMode(false);
+                  setSelectedIds([]);
+                  setSelectedWallId(null);
+                  setNewWallPoints(null);
+                }}
+              >
+                {isWallMode ? "Terminar Paredes" : "Editar Paredes"}
+              </Button>
+              <Button
+                size="$3"
+                icon={isEditMode ? Lock : Pencil}
+                onPress={() => {
+                  setIsEditMode(!isEditMode);
+                  setIsWallMode(false);
+                  setSelectedIds([]);
+                  setSelectedWallId(null);
+                  setNewWallPoints(null);
+                }}
+              >
+                {isEditMode ? "Bloquear Mesas" : "Editar Mesas"}
+              </Button>
+              {optState === "preview" ? (
+                <>
+                  <Button size="$3" onPress={applyOptimization}>Aplicar</Button>
+                  <Button size="$3" onPress={() => { setOptState("idle"); setPreviewPositions({}); }}>Cancelar</Button>
+                </>
+              ) : (
+                  <Button size="$3" icon={Sparkles} onPress={runOptimization} disabled={optState === "optimizing"}>
+                    {optState === "optimizing" ? "Calculando..." : "Auto-Distribuir"}
+                  </Button>
+              )}
+            </XStack>
           </XStack>
 
           <Card bw={2} boc="$cardBorder" bg="$cardBg" br="$6" f={1}>
@@ -889,13 +1149,16 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
                       const groupHasActiveOrder = activeOrders?.some(
                         (o) => o.tablegroup_id === group.id,
                       );
+                      const displayX = previewPositions[group.id]?.x ?? group.pos_x;
+                      const displayY = previewPositions[group.id]?.y ?? group.pos_y;
+                      const displayRot = previewPositions[group.id]?.rotation ?? group.rotation;
                       return (
                         <Group
                           key={groupId}
                           id={groupId}
-                          x={group.pos_x}
-                          y={group.pos_y}
-                          rotation={group.rotation}
+                          x={displayX}
+                          y={displayY}
+                          rotation={displayRot}
                           draggable={isEditMode}
                           dragBoundFunc={dragBoundFunc}
                           onClick={(e) => {
