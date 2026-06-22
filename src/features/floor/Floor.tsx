@@ -22,6 +22,7 @@ import {
   useCreateWallMutation,
   useUpdateWallMutation,
   useDeleteWallMutation,
+  useParseOrderAIMutation,
   TableRead,
 } from "../../api/floorApi";
 import {
@@ -248,6 +249,13 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const [stageScale, setStageScale] = useState(1);
   const [stagePos, setStagePos] = useState({ x: 0, y: 0 });
+
+  // AI Voice Recording State
+  const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const [aiText, setAiText] = useState("");
+  const [parseOrderAI, { isLoading: isParsingAI }] = useParseOrderAIMutation();
   
   const [optState, setOptState] = useState<"idle" | "optimizing" | "preview">("idle");
   const [previewPositions, setPreviewPositions] = useState<Record<number, {x: number, y: number, rotation: number}>>({});
@@ -277,6 +285,98 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
           setOptState("idle");
           setPreviewPositions({});
       }
+  };
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        const formData = new FormData();
+        formData.append("audio", audioBlob, "order.webm");
+        
+        try {
+          const res = await parseOrderAI(formData).unwrap();
+          if (res) {
+             if (res.transcription) {
+                 setAiText(res.transcription);
+             }
+             if (res.items) {
+                 res.items.forEach(item => {
+                    const dishObj = dishes?.find((d: any) => d.id === item.dish_id);
+                    if (dishObj) {
+                      setDishesMap(prev => {
+                         const existing = prev[item.dish_id];
+                         return {
+                           ...prev,
+                           [item.dish_id]: {
+                             dish: dishObj,
+                             quantity: existing ? existing.quantity + item.quantity : item.quantity
+                           }
+                         };
+                      });
+                    }
+                 });
+             }
+          }
+        } catch (e) {
+          console.error("AI Parse Error", e);
+        }
+        
+        stream.getTracks().forEach((track) => track.stop());
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (err) {
+      console.error("Error accessing microphone:", err);
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
+
+  const handleSendAIText = async () => {
+    if (!aiText.trim()) return;
+    const formData = new FormData();
+    formData.append("text", aiText);
+    setAiText("");
+    try {
+       const res = await parseOrderAI(formData).unwrap();
+       if (res && res.items) {
+          res.items.forEach(item => {
+             const dishObj = dishes?.find((d: any) => d.id === item.dish_id);
+             if (dishObj) {
+               setDishesMap(prev => {
+                  const existing = prev[item.dish_id];
+                  return {
+                    ...prev,
+                    [item.dish_id]: {
+                      dish: dishObj,
+                      quantity: existing ? existing.quantity + item.quantity : item.quantity
+                    }
+                  };
+               });
+             }
+          });
+       }
+    } catch(e) {
+       console.error("AI Text Parse Error", e);
+    }
   };
 
   const runOptimization = async () => {
@@ -1647,10 +1747,16 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
                     <Button
                       backgroundImage="linear-gradient(to right, var(--brandMain), var(--orange500))"
                       hoverStyle={{ scale: 1.02 }}
+                      onPress={isRecording ? stopRecording : startRecording}
+                      opacity={isParsingAI ? 0.5 : 1}
+                      disabled={isParsingAI}
+                      animation="bouncy"
+                      animateOnly={["transform"]}
+                      scale={isRecording ? 1.05 : 1}
                     >
-                      <Mic col="white" />
+                      {isParsingAI ? <Spinner color="white" /> : <Mic col={isRecording ? "$red500" : "white"} />}
                       <Text col="white" fontWeight="600" fontFamily="$body">
-                        Iniciar pedido por voz
+                        {isParsingAI ? "Procesando..." : isRecording ? "Detener y Enviar" : "Iniciar pedido por voz"}
                       </Text>
                     </Button>
                     <View position="relative">
@@ -1665,6 +1771,10 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
                         outlineStyle="none"
                         outlineColor="transparent"
                         focusStyle={{ boc: "$brandMain" }}
+                        value={aiText}
+                        onChangeText={setAiText}
+                        disabled={isParsingAI}
+                        onSubmitEditing={handleSendAIText}
                       />
                       <View
                         position={"absolute"}
@@ -1678,6 +1788,9 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
                         }
                         ai={"center"}
                         jc={"center"}
+                        onPress={handleSendAIText}
+                        hoverStyle={{ scale: 1.1 }}
+                        cursor="pointer"
                       >
                         <Send size={12} col={"$white"} />
                       </View>
