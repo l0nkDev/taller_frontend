@@ -3,9 +3,14 @@ import {
   Stage,
   Layer,
   Group,
+  Rect,
+  Text as KText,
   Transformer,
+  Line,
+  Circle,
 } from "react-konva";
 import Konva from "konva";
+import { Node, NodeConfig } from "konva/lib/Node";
 import {
   useGetFloorPlanQuery,
   useGetFloorsQuery,
@@ -17,6 +22,8 @@ import {
   useCreateWallMutation,
   useUpdateWallMutation,
   useDeleteWallMutation,
+  useParseOrderAIMutation,
+  TableRead,
 } from "../../api/floorApi";
 import {
   useGetActiveOrdersQuery,
@@ -58,15 +65,8 @@ import {
   Blocks,
   RefreshCcw,
   Map,
-  Sparkles,
-} from "@tamagui/lucide-icons";
+  Sparkles } from "@tamagui/lucide-icons";
 import { Dish, useGetDishesQuery } from "../../api/dishesApi";
-import { useAIAssistant } from "./hooks/useAIAssistant";
-import { useLayoutOptimizer } from "./hooks/useLayoutOptimizer";
-import { useFloorInteraction } from "./hooks/useFloorInteraction";
-import { TableNode } from "./components/TableNode";
-import { WallLayer } from "./components/WallLayer";
-import { HeatmapLayer } from "./components/HeatmapLayer";
 
 const statusMap: Record<string, { name: string; color: string }> = {
   T: { name: "TOMADO", color: "$cyan500" },
@@ -194,35 +194,459 @@ export const FloorView = () => {
     </YStack>
   );
 };
+
+const TableNode = ({
+  table,
+  isSelected,
+  onSelect,
+  hasActiveOrder,
+}: {
+  table: TableRead;
+  isSelected: boolean;
+  onSelect: (node: Node<NodeConfig>, isShiftPressed: boolean) => void;
+  hasActiveOrder: boolean;
+}) => {
+  return (
+    <Group
+      id={`table-${table.id}`}
+      x={table.offset_x}
+      y={table.offset_y}
+      width={table.width || 60}
+      height={table.height || 60}
+      rotation={table.rotation || 0}
+      draggable={false}
+      onClick={(e) => {
+        e.cancelBubble = true;
+        onSelect(e.currentTarget, e.evt.shiftKey);
+      }}
+    >
+      <Rect
+        width={table.width || 60}
+        height={table.height || 60}
+        fill={hasActiveOrder ? "#ef4444" : "#4CAF50"}
+        stroke={isSelected ? "#1976D2" : hasActiveOrder ? "#b91c1c" : "#388E3C"}
+        strokeWidth={isSelected ? 3 : 2}
+        cornerRadius={5}
+        shadowBlur={5}
+        shadowColor="black"
+        shadowOpacity={0.2}
+      />
+      <KText
+        text={`T${table.id}`}
+        width={table.width || 60}
+        height={table.height || 60}
+        align="center"
+        verticalAlign="middle"
+        fill="white"
+        fontSize={14}
+        fontStyle="bold"
+      />
+    </Group>
+  );
+};
+
 const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
   const { data: floor, isLoading, isError, refetch } = useGetFloorPlanQuery(floorId, {skip: !floorId});
+  const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
+  const [stageScale, setStageScale] = useState(1);
+  const [stagePos, setStagePos] = useState({ x: 0, y: 0 });
+
+  // AI Voice Recording State
+  const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const [aiText, setAiText] = useState("");
+  const [parseOrderAI, { isLoading: isParsingAI }] = useParseOrderAIMutation();
   
-  const {
-    optState, setOptState, previewPositions, setPreviewPositions,
-    showHeatmap, setShowHeatmap, heatmapData,
-    runOptimization, applyOptimization
-  } = useLayoutOptimizer(floor, floorId);
+  const [optState, setOptState] = useState<"idle" | "optimizing" | "preview">("idle");
+  const [previewPositions, setPreviewPositions] = useState<Record<number, {x: number, y: number, rotation: number}>>({});
 
-  const {
-    dimensions, setDimensions,
-    stageScale,
-    stagePos, setStagePos,
-    selectedIds, setSelectedIds,
-    isEditMode, setIsEditMode,
-    isWallMode, setIsWallMode,
-    selectedWallId, setSelectedWallId,
-    newWallPoints, setNewWallPoints,
-    handleWheel, checkDeselect, handleNodeSelect,
-    snap, dragBoundFunc
-  } = useFloorInteraction(floor, optState);
+  const [showHeatmap, setShowHeatmap] = useState(false);
+  const [heatmapData, setHeatmapData] = useState<{
+    minX: number, minY: number, cols: number, rows: number, CELL: number, heatmap: Int32Array, grid: Int8Array, maxVal: number
+  } | null>(null);
 
-  const [dishesMap, setDishesMap] = useState<Record<number, { dish: Dish; quantity: number }>>({});
-  const { data: dishes } = useGetDishesQuery();
+  useEffect(() => {
+    if (!floor?.walls || floor.walls.length === 0) return;
+    const walls = floor.walls;
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    walls.forEach(w => {
+        minX = Math.min(minX, w.x1, w.x2);
+        maxX = Math.max(maxX, w.x1, w.x2);
+        minY = Math.min(minY, w.y1, w.y2);
+        maxY = Math.max(maxY, w.y1, w.y2);
+    });
+    if (minX === Infinity) return;
 
-  const {
-    isRecording, aiText, setAiText, isParsingAI,
-    startRecording, stopRecording, handleSendAIText
-  } = useAIAssistant(dishes || [], setDishesMap);
+    const CELL = 10;
+    const cols = Math.floor((maxX - minX) / CELL) + 1;
+    const rows = Math.floor((maxY - minY) / CELL) + 1;
+
+    const grid = new Int8Array(cols * rows);
+    const SET_GRID = (c: number, r: number, v: number) => { if(c>=0&&c<cols&&r>=0&&r<rows) grid[r*cols+c]=v; };
+    const doorCells = new Set<string>();
+
+    walls.forEach(w => {
+      const steps = Math.ceil(Math.sqrt(Math.pow(w.x2 - w.x1, 2) + Math.pow(w.y2 - w.y1, 2)) / (CELL / 2));
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const px = w.x1 + t * (w.x2 - w.x1);
+        const py = w.y1 + t * (w.y2 - w.y1);
+        const c = Math.floor((px - minX) / CELL);
+        const r = Math.floor((py - minY) / CELL);
+        const pad = 3;
+        for(let dr=-pad; dr<=pad; dr++) {
+            for(let dc=-pad; dc<=pad; dc++) {
+               SET_GRID(c+dc, r+dr, 1);
+               if (w.isDoor) doorCells.add(`${c+dc},${r+dr}`);
+            }
+        }
+      }
+    });
+
+    const heatmap = new Int32Array(cols * rows).fill(1000000);
+    const queue: {c: number, r: number, dist: number}[] = [];
+    for (const d of doorCells) {
+        const parts = d.split(',');
+        const c = parseInt(parts[0]), r = parseInt(parts[1]);
+        heatmap[r*cols+c] = 0;
+        queue.push({c, r, dist: 0});
+    }
+
+    let head = 0;
+    let maxVal = 0;
+    while(head < queue.length) {
+        const curr = queue[head++];
+        const dirs = [[0,1],[0,-1],[1,0],[-1,0]];
+        for (const dir of dirs) {
+            const nc = curr.c + dir[0];
+            const nr = curr.r + dir[1];
+            if (nc>=0&&nc<cols&&nr>=0&&nr<rows) {
+                if (grid[nr*cols+nc] === 1 && !doorCells.has(`${nc},${nr}`)) continue;
+                if (curr.dist + 1 < heatmap[nr*cols+nc]) {
+                    heatmap[nr*cols+nc] = curr.dist + 1;
+                    maxVal = Math.max(maxVal, curr.dist + 1);
+                    queue.push({c: nc, r: nr, dist: curr.dist + 1});
+                }
+            }
+        }
+    }
+
+    // Traffic Lanes Optimization
+    const doorCenters: {x: number, y: number}[] = [];
+    walls.forEach(w => {
+        if (w.isDoor) {
+            doorCenters.push({ x: (w.x1 + w.x2) / 2, y: (w.y1 + w.y2) / 2 });
+        }
+    });
+
+    const drawLane = (x1: number, y1: number, x2: number, y2: number) => {
+        const steps = Math.ceil(Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2)) / (CELL / 2));
+        for (let i = 0; i <= steps; i++) {
+            const t = i / steps;
+            const px = x1 + t * (x2 - x1);
+            const py = y1 + t * (y2 - y1);
+            const c = Math.floor((px - minX) / CELL);
+            const r = Math.floor((py - minY) / CELL);
+            const pad = 2; // 2 cells padding = 20px each side = 50px lane width total
+            for(let dr=-pad; dr<=pad; dr++) {
+                for(let dc=-pad; dc<=pad; dc++) {
+                   if (grid[(r+dr) * cols + (c+dc)] !== 1) {
+                       SET_GRID(c+dc, r+dr, 2);
+                   }
+                }
+            }
+        }
+    };
+
+    const centerX = (minX + maxX) / 2;
+    const centerY = (minY + maxY) / 2;
+    for (const door of doorCenters) {
+        drawLane(door.x, door.y, centerX, centerY);
+    }
+
+    setHeatmapData({ minX, minY, cols, rows, CELL, heatmap, grid, maxVal });
+
+  }, [floor?.walls]);
+
+  useEffect(() => {
+    if (optState === "preview") {
+      setOptState("idle");
+      setPreviewPositions({});
+    }
+  }, [floor?.table_groups, floor?.walls]);
+
+  const applyOptimization = async () => {
+      setOptState("optimizing");
+      try {
+          for (const [idStr, pos] of Object.entries(previewPositions)) {
+             await updateGroup({
+                 groupId: parseInt(idStr),
+                 floor_id: floorId,
+                 pos_x: pos.x,
+                 pos_y: pos.y,
+                 rotation: pos.rotation
+             }).unwrap();
+          }
+      } catch (e) {
+          console.error(e);
+      } finally {
+          setOptState("idle");
+          setPreviewPositions({});
+      }
+  };
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        const formData = new FormData();
+        formData.append("audio", audioBlob, "order.webm");
+        
+        try {
+          const res = await parseOrderAI(formData).unwrap();
+          if (res) {
+             if (res.transcription) {
+                 setAiText(res.transcription);
+             }
+             if (res.items) {
+                 res.items.forEach(item => {
+                    const dishObj = dishes?.find((d: any) => d.id === item.dish_id);
+                    if (dishObj) {
+                      setDishesMap(prev => {
+                         const existing = prev[item.dish_id];
+                         return {
+                           ...prev,
+                           [item.dish_id]: {
+                             dish: dishObj,
+                             quantity: existing ? existing.quantity + item.quantity : item.quantity
+                           }
+                         };
+                      });
+                    }
+                 });
+             }
+          }
+        } catch (e) {
+          console.error("AI Parse Error", e);
+        }
+        
+        stream.getTracks().forEach((track) => track.stop());
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (err) {
+      console.error("Error accessing microphone:", err);
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
+
+  const handleSendAIText = async () => {
+    if (!aiText.trim()) return;
+    const formData = new FormData();
+    formData.append("text", aiText);
+    setAiText("");
+    try {
+       const res = await parseOrderAI(formData).unwrap();
+       if (res && res.items) {
+          res.items.forEach(item => {
+             const dishObj = dishes?.find((d: any) => d.id === item.dish_id);
+             if (dishObj) {
+               setDishesMap(prev => {
+                  const existing = prev[item.dish_id];
+                  return {
+                    ...prev,
+                    [item.dish_id]: {
+                      dish: dishObj,
+                      quantity: existing ? existing.quantity + item.quantity : item.quantity
+                    }
+                  };
+               });
+             }
+          });
+       }
+    } catch(e) {
+       console.error("AI Text Parse Error", e);
+    }
+  };
+
+  const runOptimization = async () => {
+    if (!floor?.walls || floor.walls.length === 0 || !heatmapData) return;
+    setOptState("optimizing");
+    await new Promise(r => setTimeout(r, 100)); // allow UI to render 'Calculando...'
+
+    const groups = floor.table_groups || [];
+    const { minX, minY, cols, rows, CELL, heatmap, grid } = heatmapData;
+
+    const sortedGroups = [...groups].sort((a: any,b: any) => b.current_tables.length - a.current_tables.length);
+    const preview: Record<number, {x:number,y:number,rotation:number}> = {};
+
+    let currentGrid = new Int8Array(grid);
+    const LOCAL_SET_GRID = (c: number, r: number, val: number) => { 
+        if(c>=0 && c<cols && r>=0 && r<rows) currentGrid[r * cols + c] = val; 
+    };
+    const LOCAL_GRID = (c: number, r: number) => {
+        if (c < 0 || c >= cols || r < 0 || r >= rows) return 1;
+        return currentGrid[r * cols + c];
+    };
+
+    for (const g of sortedGroups) {
+        let bestScore = -Infinity;
+        let bestX = g.pos_x;
+        let bestY = g.pos_y;
+        let bestRot = g.rotation || 0;
+
+        for (const rot of [0, 90, 180, 270]) {
+            for (let r = 2; r < rows - 2; r += 2) {
+                for (let c = 2; c < cols - 2; c += 2) {
+                    const px = minX + c * CELL;
+                    const py = minY + r * CELL;
+                    
+                    const cells: {c:number, r:number}[] = [];
+                    let maxR = 0;
+                    g.current_tables.forEach((t: any) => {
+                        const w = (t.width || 60) * (t.scaleX || 1);
+                        const h = (t.height || 60) * (t.scaleY || 1);
+                        const ox = t.offset_x || 0;
+                        const oy = t.offset_y || 0;
+                        const tRot = t.rotation || 0;
+                        const gRot = rot;
+                        const absTRot = (tRot + gRot) % 360;
+                        
+                        const rad = gRot * Math.PI / 180;
+                        const cos = Math.cos(rad);
+                        const sin = Math.sin(rad);
+                        const absTx = px + ox * cos - oy * sin;
+                        const absTy = py + ox * sin + oy * cos;
+                        
+                        const rrad = -absTRot * Math.PI / 180;
+                        const rcos = Math.cos(rrad);
+                        const rsin = Math.sin(rrad);
+
+                        const R = Math.sqrt(w*w + h*h) + 5;
+                        if (R > maxR) maxR = R;
+
+                        const startC = Math.floor((absTx - R - minX) / CELL);
+                        const endC = Math.floor((absTx + R - minX) / CELL);
+                        const startR = Math.floor((absTy - R - minY) / CELL);
+                        const endR = Math.floor((absTy + R - minY) / CELL);
+
+                        for(let rr=startR; rr<=endR; rr++) {
+                            for(let cc=startC; cc<=endC; cc++) {
+                                const cx = minX + cc * CELL;
+                                const cy = minY + rr * CELL;
+                                const lx = cx - absTx;
+                                const ly = cy - absTy;
+                                const locX = lx * rcos - ly * rsin;
+                                const locY = lx * rsin + ly * rcos;
+                                if (locX >= 0 && locX <= w && locY >= 0 && locY <= h) {
+                                    cells.push({c: cc, r: rr});
+                                }
+                            }
+                        }
+                    });
+
+                    let penalty = 0;
+                    let heatSum = 0;
+                    if (cells.length === 0) {
+                        penalty += 100000;
+                    } else {
+                        for (const cell of cells) {
+                            const val = LOCAL_GRID(cell.c, cell.r);
+                            if (val === 1) {
+                                penalty += 100000;
+                            } else if (val === 2) {
+                                heatSum += 500; // Soft constraint: huge penalty but won't crash the placement
+                            }
+                            heatSum += heatmap[cell.r*cols+cell.c];
+                        }
+                    }
+
+                    if (penalty === 0) {
+                        const score = -heatSum * 1000;
+                        if (score > bestScore) {
+                            bestScore = score;
+                            bestX = px;
+                            bestY = py;
+                            bestRot = rot;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (bestScore > -Infinity) {
+            preview[g.id] = {x: bestX, y: bestY, rotation: bestRot};
+            
+            const rot = bestRot;
+            g.current_tables.forEach((t: any) => {
+                const w = (t.width || 60) * (t.scaleX || 1);
+                const h = (t.height || 60) * (t.scaleY || 1);
+                const ox = t.offset_x || 0;
+                const oy = t.offset_y || 0;
+                const tRot = t.rotation || 0;
+                const gRot = rot;
+                const absTRot = (tRot + gRot) % 360;
+                
+                const rad = gRot * Math.PI / 180;
+                const cos = Math.cos(rad);
+                const sin = Math.sin(rad);
+                const absTx = bestX + ox * cos - oy * sin;
+                const absTy = bestY + ox * sin + oy * cos;
+                
+                const rrad = -absTRot * Math.PI / 180;
+                const rcos = Math.cos(rrad);
+                const rsin = Math.sin(rrad);
+
+                const R = Math.sqrt(w*w + h*h) + 5;
+                const startC = Math.floor((absTx - R - minX) / CELL);
+                const endC = Math.floor((absTx + R - minX) / CELL);
+                const startR = Math.floor((absTy - R - minY) / CELL);
+                const endR = Math.floor((absTy + R - minY) / CELL);
+
+                for(let rr=startR; rr<=endR; rr++) {
+                    for(let cc=startC; cc<=endC; cc++) {
+                        const cx = minX + cc * CELL;
+                        const cy = minY + rr * CELL;
+                        const lx = cx - absTx;
+                        const ly = cy - absTy;
+                        const locX = lx * rcos - ly * rsin;
+                        const locY = lx * rsin + ly * rcos;
+                        if (locX >= -20 && locX <= w + 20 && locY >= -20 && locY <= h + 20) { // 20px padding between tables
+                            LOCAL_SET_GRID(cc, rr, 1);
+                        }
+                    }
+                }
+            });
+            console.log(`✅ Table ${g.id} placed at (${bestX}, ${bestY}) with rot ${bestRot}. Score: ${bestScore}`);
+        } else {
+            console.warn(`❌ Table ${g.id} FAILED TO PLACE! Falling back to original. Groups size: ${g.current_tables.length}`);
+            preview[g.id] = {x: g.pos_x, y: g.pos_y, rotation: g.rotation || 0};
+        }
+    }
+    
+    console.log("=== FINAL PREVIEW ===", preview);
+    setPreviewPositions(preview);
+    setOptState("preview");
+  };
 
   const [updateTable] = useUpdateTableMutation();
   const [updateGroup] = useUpdateGroupMutation();
@@ -236,17 +660,25 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
     useUpdateOrderDetailMutation();
   const [payOrder, { isLoading: isPaying }] = usePayOrderMutation();
 
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [inputMode, setInputMode] = useState<string>("manual");
+  const [isEditMode, setIsEditMode] = useState<boolean>(false);
+  const [isWallMode, setIsWallMode] = useState<boolean>(false);
+  const [newWallPoints, setNewWallPoints] = useState<number[] | null>(null);
   const [createWall] = useCreateWallMutation();
   const [updateWall] = useUpdateWallMutation();
   const [deleteWall] = useDeleteWallMutation();
+  const [selectedWallId, setSelectedWallId] = useState<number | null>(null);
 
   const transformerRef = useRef<Konva.Transformer>(null);
   const stageRef = useRef<Konva.Stage>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const lastSelectedRef = useRef<string | null>(null);
 
-
+  const { data: dishes } = useGetDishesQuery();
+  const [dishesMap, setDishesMap] = useState<{
+    [key: number]: { dish: Dish; quantity: number };
+  }>({});
 
   useEffect(() => {
     const currentSelection = selectedIds.length === 1 ? selectedIds[0] : null;
@@ -314,7 +746,85 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
     });
     resizeObserver.observe(containerRef.current);
     return () => resizeObserver.disconnect();
-  });
+  }, []);
+
+  const gridSize = 20;
+  const snap = (v: number) => Math.round(v / gridSize) * gridSize;
+  const dragBoundFunc = (pos: {x: number, y: number}) => {
+    const logicalX = (pos.x - stagePos.x) / stageScale;
+    const logicalY = (pos.y - stagePos.y) / stageScale;
+    return {
+      x: snap(logicalX) * stageScale + stagePos.x,
+      y: snap(logicalY) * stageScale + stagePos.y,
+    };
+  };
+
+  const handleWheel = (e: Konva.KonvaEventObject<WheelEvent>) => {
+    e.evt.preventDefault();
+    const stage = e.target.getStage();
+    if (!stage) return;
+    const scaleBy = 1.05;
+    const oldScale = stage.scaleX();
+    const pointer = stage.getPointerPosition();
+    if (!pointer) return;
+    const mousePointTo = {
+      x: (pointer.x - stage.x()) / oldScale,
+      y: (pointer.y - stage.y()) / oldScale,
+    };
+    const newScale = e.evt.deltaY < 0 ? oldScale * scaleBy : oldScale / scaleBy;
+    setStageScale(newScale);
+    setStagePos({
+      x: pointer.x - mousePointTo.x * newScale,
+      y: pointer.y - mousePointTo.y * newScale,
+    });
+  };
+
+  const checkDeselect = (
+    e: Konva.KonvaEventObject<MouseEvent | TouchEvent>,
+  ) => {
+    const clickedOnEmpty = e.target === e.target.getStage();
+    if (clickedOnEmpty) {
+      if (isEditMode || isWallMode || optState !== "idle") {
+        setSelectedIds([]);
+      }
+      setSelectedWallId(null);
+    }
+  };
+
+  const handleNodeSelect = (node: Konva.Node, isShiftPressed: boolean) => {
+    const id = node.id();
+    if (id.startsWith("group-")) {
+      if (isShiftPressed)
+        setSelectedIds((prev) =>
+          prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id],
+        );
+      else setSelectedIds([id]);
+      return;
+    }
+    const tableIdMatch = id.match(/table-(\d+)/);
+    if (tableIdMatch) {
+      const tId = parseInt(tableIdMatch[1]);
+      const parentGroup = floor?.table_groups.find((g) =>
+        g.current_tables.some((t) => t.id === tId),
+      );
+      if (parentGroup) {
+        const groupId = `group-${parentGroup.id}`;
+        if (parentGroup.current_tables.length > 1) {
+          if (selectedIds.length === 1 && selectedIds[0] === groupId)
+            setSelectedIds([id]);
+          else setSelectedIds([groupId]);
+        } else {
+          if (isShiftPressed)
+            setSelectedIds((prev) =>
+              prev.includes(groupId)
+                ? prev.filter((p) => p !== groupId)
+                : [...prev, groupId],
+            );
+          else setSelectedIds([groupId]);
+        }
+      }
+    }
+  };
 
   const handleAddTable = () => {
     const centerX = (dimensions.width / 2 - stagePos.x) / stageScale;
@@ -594,7 +1104,7 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
                 ref={containerRef}
                 style={{ 
                   width: "100%", height: "100%", borderRadius: "$6",
-                  backgroundSize: `${snap(10) * stageScale}px ${snap(10) * stageScale}px`,
+                  backgroundSize: `${gridSize * stageScale}px ${gridSize * stageScale}px`,
                   backgroundPosition: `${stagePos.x}px ${stagePos.y}px`,
                   backgroundImage: (isEditMode || isWallMode) ? `linear-gradient(to right, #e5e7eb 1px, transparent 1px), linear-gradient(to bottom, #e5e7eb 1px, transparent 1px)` : undefined,
                   backgroundColor: '#ffffff'
@@ -653,23 +1163,172 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
                   style={{ cursor: isWallMode ? "crosshair" : "grab" }}
                 >
                   <Layer>
-                    <WallLayer 
-                      floor={floor} 
-                      floorId={floorId} 
-                      isWallMode={isWallMode} 
-                      setSelectedWallId={setSelectedWallId}
-                      newWallPoints={newWallPoints}
-                      snap={snap}
-                      dragBoundFunc={dragBoundFunc}
-                      stageScale={stageScale}
-                      stagePos={stagePos}
-                    />
+                    {floor.walls?.map(wall => (
+                      <Group key={`wall-${wall.id}`}>
+                        <Line
+                          id={`wall-line-${wall.id}`}
+                          points={[wall.x1, wall.y1, wall.x2, wall.y2]}
+                          stroke={wall.isDoor ? "#f59e0b" : "#1f2937"}
+                          strokeWidth={8}
+                          hitStrokeWidth={20}
+                          lineCap="round"
+                          onClick={(e) => {
+                            if (isWallMode) {
+                              e.cancelBubble = true;
+                              setSelectedWallId(wall.id);
+                            }
+                          }}
+                          onDragStart={(e) => {
+                            if (isWallMode && e.target instanceof Konva.Line) {
+                              e.cancelBubble = true;
+                              e.target.stopDrag();
+                              // Split wall at click
+                              const pos = e.target.getStage()?.getPointerPosition();
+                              if (pos) {
+                                const logicalX = snap((pos.x - stagePos.x) / stageScale);
+                                const logicalY = snap((pos.y - stagePos.y) / stageScale);
+                                
+                                // Update this wall to end at logicalX, logicalY
+                                updateWall({ wallId: wall.id, floor_id: floorId, x2: logicalX, y2: logicalY });
+                                
+                                // Create new wall from logicalX, logicalY to old x2, y2
+                                createWall({
+                                  floor_id: floorId,
+                                  x1: logicalX,
+                                  y1: logicalY,
+                                  x2: wall.x2,
+                                  y2: wall.y2,
+                                  isDoor: wall.isDoor
+                                });
+                              }
+                            }
+                          }}
+                          draggable={isWallMode}
+                        />
+                        {isWallMode && (
+                          <>
+                            <Circle
+                              id={`wall-circle-start-${wall.id}`}
+                              x={wall.x1}
+                              y={wall.y1}
+                              radius={6}
+                              fill="#3b82f6"
+                              draggable
+                              dragBoundFunc={dragBoundFunc}
+                              onDragMove={(e) => {
+                                e.cancelBubble = true;
+                                const pos = { x: e.target.x(), y: e.target.y() };
+                                e.target.getStage()?.findOne(`#wall-line-${wall.id}`)?.setAttr('points', [pos.x, pos.y, wall.x2, wall.y2]);
+                                floor.walls?.forEach(w => {
+                                  if (w.id !== wall.id) {
+                                    if (Math.abs(w.x1 - wall.x1) < 15 && Math.abs(w.y1 - wall.y1) < 15) {
+                                       e.target.getStage()?.findOne(`#wall-line-${w.id}`)?.setAttr('points', [pos.x, pos.y, w.x2, w.y2]);
+                                       e.target.getStage()?.findOne(`#wall-circle-start-${w.id}`)?.position(pos);
+                                    }
+                                    if (Math.abs(w.x2 - wall.x1) < 15 && Math.abs(w.y2 - wall.y1) < 15) {
+                                       e.target.getStage()?.findOne(`#wall-line-${w.id}`)?.setAttr('points', [w.x1, w.y1, pos.x, pos.y]);
+                                       e.target.getStage()?.findOne(`#wall-circle-end-${w.id}`)?.position(pos);
+                                    }
+                                  }
+                                });
+                              }}
+                              onDragEnd={(e) => {
+                                e.cancelBubble = true;
+                                const pos = { x: e.target.x(), y: e.target.y() };
+                                updateWall({ wallId: wall.id, floor_id: floorId, x1: pos.x, y1: pos.y });
+                                floor.walls?.forEach(w => {
+                                  if (w.id !== wall.id) {
+                                    if (Math.abs(w.x1 - wall.x1) < 15 && Math.abs(w.y1 - wall.y1) < 15) {
+                                       updateWall({ wallId: w.id, floor_id: floorId, x1: pos.x, y1: pos.y });
+                                    }
+                                    if (Math.abs(w.x2 - wall.x1) < 15 && Math.abs(w.y2 - wall.y1) < 15) {
+                                       updateWall({ wallId: w.id, floor_id: floorId, x2: pos.x, y2: pos.y });
+                                    }
+                                  }
+                                });
+                              }}
+                            />
+                            <Circle
+                              id={`wall-circle-end-${wall.id}`}
+                              x={wall.x2}
+                              y={wall.y2}
+                              radius={6}
+                              fill="#3b82f6"
+                              draggable
+                              dragBoundFunc={dragBoundFunc}
+                              onDragMove={(e) => {
+                                e.cancelBubble = true;
+                                const pos = { x: e.target.x(), y: e.target.y() };
+                                e.target.getStage()?.findOne(`#wall-line-${wall.id}`)?.setAttr('points', [wall.x1, wall.y1, pos.x, pos.y]);
+                                floor.walls?.forEach(w => {
+                                  if (w.id !== wall.id) {
+                                    if (Math.abs(w.x1 - wall.x2) < 15 && Math.abs(w.y1 - wall.y2) < 15) {
+                                       e.target.getStage()?.findOne(`#wall-line-${w.id}`)?.setAttr('points', [pos.x, pos.y, w.x2, w.y2]);
+                                       e.target.getStage()?.findOne(`#wall-circle-start-${w.id}`)?.position(pos);
+                                    }
+                                    if (Math.abs(w.x2 - wall.x2) < 15 && Math.abs(w.y2 - wall.y2) < 15) {
+                                       e.target.getStage()?.findOne(`#wall-line-${w.id}`)?.setAttr('points', [w.x1, w.y1, pos.x, pos.y]);
+                                       e.target.getStage()?.findOne(`#wall-circle-end-${w.id}`)?.position(pos);
+                                    }
+                                  }
+                                });
+                              }}
+                              onDragEnd={(e) => {
+                                e.cancelBubble = true;
+                                const pos = { x: e.target.x(), y: e.target.y() };
+                                updateWall({ wallId: wall.id, floor_id: floorId, x2: pos.x, y2: pos.y });
+                                floor.walls?.forEach(w => {
+                                  if (w.id !== wall.id) {
+                                    if (Math.abs(w.x1 - wall.x2) < 15 && Math.abs(w.y1 - wall.y2) < 15) {
+                                       updateWall({ wallId: w.id, floor_id: floorId, x1: pos.x, y1: pos.y });
+                                    }
+                                    if (Math.abs(w.x2 - wall.x2) < 15 && Math.abs(w.y2 - wall.y2) < 15) {
+                                       updateWall({ wallId: w.id, floor_id: floorId, x2: pos.x, y2: pos.y });
+                                    }
+                                  }
+                                });
+                              }}
+                            />
+                          </>
+                        )}
+                      </Group>
+                    ))}
+                    
+                    {newWallPoints && (
+                      <Line
+                        points={newWallPoints}
+                        stroke="#9ca3af"
+                        strokeWidth={8}
+                        lineCap="round"
+                        dash={[10, 10]}
+                        listening={false}
+                      />
+                    )}
 
-                    <HeatmapLayer 
-                      showHeatmap={showHeatmap}
-                      optState={optState}
-                      heatmapData={heatmapData}
-                    />
+                    {(showHeatmap || optState !== "idle") && heatmapData && (
+                        <Group>
+                           {Array.from({ length: heatmapData.rows }).map((_, r) =>
+                              Array.from({ length: heatmapData.cols }).map((_, c) => {
+                                 const val = heatmapData.heatmap[r * heatmapData.cols + c];
+                                 if (val === 1000000) return null; // Unreachable
+                                 const ratio = val / heatmapData.maxVal;
+                                 const color = `hsl(${(1 - ratio) * 120}, 100%, 50%)`;
+                                 return (
+                                     <Rect
+                                        key={`${r}-${c}`}
+                                        x={heatmapData.minX + c * heatmapData.CELL}
+                                        y={heatmapData.minY + r * heatmapData.CELL}
+                                        width={heatmapData.CELL}
+                                        height={heatmapData.CELL}
+                                        fill={color}
+                                        opacity={0.4}
+                                        listening={false}
+                                     />
+                                 );
+                              })
+                           )}
+                        </Group>
+                    )}
 
                     {floor.table_groups?.map((group) => {
                       const groupId = `group-${group.id}`;
