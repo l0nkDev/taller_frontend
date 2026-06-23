@@ -36,6 +36,7 @@ export function MenuDialog({ editing = null }: { editing: Dish | null }) {
       name: editing ? editing.name : "",
       description: editing ? editing.description : "",
       price: editing ? String(editing.price) : "0.00",
+      cost: editing && editing.cost ? String(editing.cost) : "0.00",
       category_id: editing ? String(editing.category_id) : "0",
       available: editing ? editing.available : true
     },
@@ -46,6 +47,8 @@ export function MenuDialog({ editing = null }: { editing: Dish | null }) {
           !value.description ||
           !value.price ||
           Number(value.price) <= 0 ||
+          !value.cost ||
+          Number(value.cost) < 0 ||
           !value.category_id ||
           value.category_id === "0")
       )
@@ -57,6 +60,7 @@ export function MenuDialog({ editing = null }: { editing: Dish | null }) {
           body: {
             ...value,
             price: Number(value.price),
+            cost: Number(value.cost),
             category_id: Number(value.category_id),
             available: form.state.values.available
           },
@@ -65,6 +69,7 @@ export function MenuDialog({ editing = null }: { editing: Dish | null }) {
         await createUser({
           ...value,
           price: Number(value.price),
+          cost: Number(value.cost),
           category_id: Number(value.category_id),
           available: form.state.values.available
         });
@@ -251,6 +256,34 @@ export function MenuDialog({ editing = null }: { editing: Dish | null }) {
                 </YStack>
                 <YStack gap={"$2"} f={1}>
                   <XStack gap={"$2"} ai={"center"}>
+                    <Banknote size={15} color={"$gray500"} />
+                    <Text>Costo</Text>
+                    <Text col={"$amber700"}>*</Text>
+                  </XStack>
+                  <form.Field
+                    name="cost"
+                    children={(field) => (
+                      <Input
+                        fos={"$5"}
+                        f={1}
+                        bw={2}
+                        bc="$cardBorder"
+                        bg="$cardBg"
+                        outlineStyle="none"
+                        outlineColor="transparent"
+                        focusStyle={{
+                          boc: "$brandMain",
+                        }}
+                        placeholder="Costo de prod."
+                        value={field.state.value}
+                        onChangeText={field.handleChange}
+                        onBlur={field.handleBlur}
+                      />
+                    )}
+                  />
+                </YStack>
+                <YStack gap={"$2"} f={1}>
+                  <XStack gap={"$2"} ai={"center"}>
                     <Briefcase size={15} color={"$orange500"} />
                     <Text>Categoría</Text>
                     <Text col={"$amber700"}>*</Text>
@@ -338,10 +371,11 @@ export function MenuDialog({ editing = null }: { editing: Dish | null }) {
                     state.values.name,
                     state.values.description,
                     state.values.price,
+                    state.values.cost,
                     state.values.category_id,
                   ]}
                 >
-                  {([name, description, price, category_id]) => {
+                  {([name, description, price, cost, category_id]) => {
                     return (
                       <Button
                         f={1}
@@ -351,6 +385,8 @@ export function MenuDialog({ editing = null }: { editing: Dish | null }) {
                             !description ||
                             !price ||
                             Number(price) <= 0 ||
+                            !cost ||
+                            Number(cost) < 0 ||
                             !category_id ||
                             category_id === "0")
                         }

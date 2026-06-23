@@ -91,12 +91,20 @@ export function MenuView() {
 
                   <YStack>
                     <XStack gap={"$3"} ai={"center"} mt={"$4"} mb={"$3"}>
-                      <Text fow={600}>
-                        {Intl.NumberFormat("es-BO", {
-                          style: "currency",
-                          currency: "BOB",
-                        }).format(d.price)}
-                      </Text>
+                      <YStack gap={"$1"}>
+                        <Text fow={600} fos={"$5"}>
+                          {Intl.NumberFormat("es-BO", {
+                            style: "currency",
+                            currency: "BOB",
+                          }).format(d.price)}
+                        </Text>
+                        <Text col={"$gray500"} fos={"$3"}>
+                          Costo: {Intl.NumberFormat("es-BO", {
+                            style: "currency",
+                            currency: "BOB",
+                          }).format(d.cost || 0)}
+                        </Text>
+                      </YStack>
                       <Text
                         col={"$amber700"}
                         bg={"$amber100"}

@@ -1,6 +1,6 @@
 import { ElementType } from "react";
 import { YStack, XStack, Button, Text } from "tamagui";
-import { useAppDispatch } from "../../store/hooks";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { logout } from "../../store/authSlice";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -59,6 +59,7 @@ const SidebarItem = ({
 export default function MainLayout() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const user = useAppSelector((state) => state.auth.user);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -105,36 +106,44 @@ export default function MainLayout() {
       </XStack>
       <XStack f={1}>
         <YStack w={100} px="$2" py="$4" gap="$2">
-          <SidebarItem
-            path="/floorplan"
-            icon={LayoutGrid}
-            label="Plano de piso"
-          />
-          <SidebarItem
-            path="/orders"
-            icon={ShoppingCart}
-            label="Órdenes"
-          />
-          <SidebarItem
-            path="/menu"
-            icon={MenuSquare}
-            label="Menú"
-          />
-          <SidebarItem
-            path="/users"
-            icon={Users}
-            label="Usuarios"
-          />
-          <SidebarItem
-            path="/bi"
-            icon={LineChart}
-            label="Dashboard"
-          />
-          <SidebarItem
-            path="/history"
-            icon={History}
-            label="Historial"
-          />
+          {(!user || user.role === 'admin' || user.role === 'waiter') && (
+            <SidebarItem
+              path="/floorplan"
+              icon={LayoutGrid}
+              label="Plano de piso"
+            />
+          )}
+          {(!user || user.role === 'admin' || user.role === 'kitchen') && (
+            <SidebarItem
+              path="/orders"
+              icon={ShoppingCart}
+              label="Órdenes"
+            />
+          )}
+          {(!user || user.role === 'admin') && (
+            <>
+              <SidebarItem
+                path="/menu"
+                icon={MenuSquare}
+                label="Menú"
+              />
+              <SidebarItem
+                path="/users"
+                icon={Users}
+                label="Usuarios"
+              />
+              <SidebarItem
+                path="/bi"
+                icon={LineChart}
+                label="Dashboard"
+              />
+              <SidebarItem
+                path="/history"
+                icon={History}
+                label="Historial"
+              />
+            </>
+          )}
           <YStack f={1} />
         </YStack>
         <YStack

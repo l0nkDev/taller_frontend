@@ -64,6 +64,7 @@ import { Dish, useGetDishesQuery } from "../../api/dishesApi";
 import { useAIAssistant } from "./hooks/useAIAssistant";
 import { useLayoutOptimizer } from "./hooks/useLayoutOptimizer";
 import { useFloorInteraction } from "./hooks/useFloorInteraction";
+import { useAppSelector } from "../../store/hooks";
 import { TableNode } from "./components/TableNode";
 import { WallLayer } from "./components/WallLayer";
 import { HeatmapLayer } from "./components/HeatmapLayer";
@@ -123,6 +124,9 @@ const ErrorScreen = ({refresh} : {refresh: () => void}) => (
 
 export const FloorView = () => {
   const [selectedFloor, setSelectedFloor] = useState<number | null>(null);
+  const user = useAppSelector((state) => state.auth.user);
+
+  // Fetch floors
   const { data: floors, isFetching, isError, refetch } = useGetFloorsQuery();
 
   useEffect(() => {
@@ -195,6 +199,7 @@ export const FloorView = () => {
   );
 };
 const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
+  const user = useAppSelector((state) => state.auth.user);
   const { data: floor, isLoading, isError, refetch } = useGetFloorPlanQuery(floorId, {skip: !floorId});
   
   const {
@@ -581,9 +586,11 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
                   <Button size="$3" onPress={() => { setOptState("idle"); setPreviewPositions({}); }}>Cancelar</Button>
                 </>
               ) : (
+                (!user || user.role === 'admin') && (
                   <Button size="$3" icon={Sparkles} onPress={runOptimization} disabled={optState === "optimizing"}>
                     {optState === "optimizing" ? "Calculando..." : "Auto-Distribuir"}
                   </Button>
+                )
               )}
             </XStack>
           </XStack>

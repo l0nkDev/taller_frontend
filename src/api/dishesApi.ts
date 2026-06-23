@@ -8,6 +8,7 @@ export interface Dish {
   description: string,
   category_id: number;
   price: number;
+  cost: number;
   available: boolean;
   category_name: string;
 }

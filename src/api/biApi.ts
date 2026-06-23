@@ -50,6 +50,16 @@ export interface SalesPerMonth {
   revenue: number;
 }
 
+export interface DiscountRecommendation {
+  dish_id: number;
+  dish_name: string;
+  current_price: number;
+  current_cost: number;
+  margin_percentage: number;
+  predicted_sales_next_week: number;
+  reason: string;
+}
+
 export interface DashboardStats {
   total_revenue: number;
   total_orders: number;
@@ -58,6 +68,7 @@ export interface DashboardStats {
   sales_per_day: SalesPerDay[];
   sales_per_week: SalesPerWeek[];
   sales_per_month: SalesPerMonth[];
+  discount_recommendations: DiscountRecommendation[];
 }
 
 export interface Projection {

@@ -167,6 +167,42 @@ export const BIView = () => {
           )}
         </Card>
       </XStack>
+
+      {/* AI Recommendations */}
+      <XStack gap="$4" flexWrap="wrap" mt="$4">
+        <Card bw={2} boc="$cardBorder" bg="$cardBg" br="$6" p="$4" f={1} overflow="hidden">
+          <XStack jc="space-between" ai="center" mb="$4">
+            <Text color="$secondaryText" fos="$4" fontWeight="bold">Recomendaciones de IA (Descuentos)</Text>
+          </XStack>
+          
+          {(!stats.discount_recommendations || stats.discount_recommendations.length === 0) ? (
+            <View p="$4" ai="center" jc="center" bg="$gray2" br="$4" bw={1} boc="$gray4">
+               <Text color="$gray500" ta="center">
+                 No hay recomendaciones actuales. Se requiere que un plato tenga un margen de ganancia &gt; 50% y proyección de ventas baja, o el modelo necesita más historial de ventas (mínimo 3 días).
+               </Text>
+            </View>
+          ) : (
+            <YStack gap="$4">
+              {stats.discount_recommendations.map((rec) => (
+                <XStack key={rec.dish_id} p="$3" bg="$gray2" br="$4" bw={1} boc="$gray4" jc="space-between" ai="center">
+                  <YStack f={1} mr="$3">
+                    <Text fontWeight="bold" fos="$5" mb="$1">{rec.dish_name}</Text>
+                    <Text color="$gray500" fos="$3">{rec.reason}</Text>
+                  </YStack>
+                  <YStack ai="flex-end" gap="$2">
+                    <Text bg="$green100" col="$green700" px="$2" py="$1" br="$3" fos="$2" fow="bold">
+                      Margen: {Math.round(rec.margin_percentage * 100)}%
+                    </Text>
+                    <Text bg="$amber100" col="$amber700" px="$2" py="$1" br="$3" fos="$2" fow="bold">
+                      Predicción: {rec.predicted_sales_next_week} unid.
+                    </Text>
+                  </YStack>
+                </XStack>
+              ))}
+            </YStack>
+          )}
+        </Card>
+      </XStack>
       </YStack>
     </ScrollView>
   );

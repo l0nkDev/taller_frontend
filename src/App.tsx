@@ -22,6 +22,23 @@ const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
   return children;
 };
 
+const RoleProtectedRoute = ({ children, allowedRoles }: { children: JSX.Element, allowedRoles: string[] }) => {
+  const user = useAppSelector((state) => state.auth.user);
+
+  if (!user || !allowedRoles.includes(user.role)) {
+    return <DefaultRoute />;
+  }
+  return children;
+};
+
+const DefaultRoute = () => {
+  const user = useAppSelector((state) => state.auth.user);
+  if (!user) return <Navigate to="/login" replace />;
+  if (user.role === 'waiter') return <Navigate to="/floorplan" replace />;
+  if (user.role === 'kitchen') return <Navigate to="/orders" replace />;
+  return <Navigate to="/menu" replace />; // Admin default
+};
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -35,15 +52,15 @@ export default function App() {
             </ProtectedRoute>
           } 
         >
-          <Route index element={<Navigate to="/menu" replace />} />
-          <Route path="users" element={<UsersView />} />
-          <Route path="menu" element={<MenuView />} />
-          <Route path="floorplan" element={<FloorView/>} />
-          <Route path="orders" element={<OrdersView/>} />
-          <Route path="bi" element={<BIView />} />
-          <Route path="history" element={<SalesHistoryView />} />
+          <Route index element={<DefaultRoute />} />
+          <Route path="users" element={<RoleProtectedRoute allowedRoles={['admin']}><UsersView /></RoleProtectedRoute>} />
+          <Route path="menu" element={<RoleProtectedRoute allowedRoles={['admin']}><MenuView /></RoleProtectedRoute>} />
+          <Route path="floorplan" element={<RoleProtectedRoute allowedRoles={['admin', 'waiter']}><FloorView/></RoleProtectedRoute>} />
+          <Route path="orders" element={<RoleProtectedRoute allowedRoles={['admin', 'kitchen']}><OrdersView/></RoleProtectedRoute>} />
+          <Route path="bi" element={<RoleProtectedRoute allowedRoles={['admin']}><BIView /></RoleProtectedRoute>} />
+          <Route path="history" element={<RoleProtectedRoute allowedRoles={['admin']}><SalesHistoryView /></RoleProtectedRoute>} />
         </Route>
-        <Route path="*" element={<Navigate to="/menu" replace />} />
+        <Route path="*" element={<DefaultRoute />} />
       </Routes>
     </BrowserRouter>
   );
