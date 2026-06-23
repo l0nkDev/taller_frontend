@@ -35,21 +35,25 @@ export function UserDialog({ editing = null }: { editing: User | null }) {
       role: editing ? editing.role : 'waiter',
     },
     onSubmit: async ({ value }) => {
-      if (
-        !editing &&
-        (!value.fname ||
-          !value.lname ||
-          !value.username ||
-          !value.phone ||
-          !value.role ||
-          !value.password ||
-          value.password.length < 8 ||
-          value.password !== value.passwordConfirm)
-      )
+      if (!value.fname || !value.lname || !value.username || !value.phone || !value.role) {
         return;
-      console.log('Sending to FastAPI:', value);
-      if (editing) await updateUser({ id: editing.id, body: value });
-      else await createUser(value);
+      }
+      
+      if (!editing) {
+        if (!value.password || value.password.length < 8 || value.password !== value.passwordConfirm) return;
+      } else {
+        if (value.password && (value.password.length < 8 || value.password !== value.passwordConfirm)) return;
+      }
+
+      const submitData: Record<string, any> = { ...value };
+      if (editing && !submitData.password) {
+        delete submitData.password;
+      }
+      delete submitData.passwordConfirm;
+
+      console.log('Sending to FastAPI:', submitData);
+      if (editing) await updateUser({ id: editing.id, body: submitData });
+      else await createUser(submitData as any);
       setOpen(false);
     },
   });
@@ -192,33 +196,35 @@ export function UserDialog({ editing = null }: { editing: User | null }) {
                 </YStack>
               </XStack>
               <XStack gap="$3">
-                <YStack gap="$2" f={1}>
-                  <XStack gap="$2" ai="center">
-                    <AtSign size={15} color="$orange500" />
-                    <Text>Usuario</Text>
-                    <Text col="$amber700">*</Text>
-                  </XStack>
-                  <form.Field name="username">
-                    {(field) => (
-                      <Input
-                        fos="$5"
-                        f={1}
-                        bw={2}
-                        bc="$cardBorder"
-                        bg="$cardBg"
-                        outlineStyle="none"
-                        outlineColor="transparent"
-                        focusStyle={{
-                          boc: '$brandMain',
-                        }}
-                        placeholder="usuario"
-                        value={field.state.value}
-                        onChangeText={field.handleChange}
-                        onBlur={field.handleBlur}
-                      />
-                    )}
-                  </form.Field>
-                </YStack>
+                {!editing && (
+                  <YStack gap="$2" f={1}>
+                    <XStack gap="$2" ai="center">
+                      <AtSign size={15} color="$orange500" />
+                      <Text>Usuario</Text>
+                      <Text col="$amber700">*</Text>
+                    </XStack>
+                    <form.Field name="username">
+                      {(field) => (
+                        <Input
+                          fos="$5"
+                          f={1}
+                          bw={2}
+                          bc="$cardBorder"
+                          bg="$cardBg"
+                          outlineStyle="none"
+                          outlineColor="transparent"
+                          focusStyle={{
+                            boc: '$brandMain',
+                          }}
+                          placeholder="usuario"
+                          value={field.state.value}
+                          onChangeText={field.handleChange}
+                          onBlur={field.handleBlur}
+                        />
+                      )}
+                    </form.Field>
+                  </YStack>
+                )}
                 <YStack gap="$2" f={1}>
                   <XStack gap="$2" ai="center">
                     <Phone size={15} color="$orange500" />
@@ -301,10 +307,14 @@ export function UserDialog({ editing = null }: { editing: User | null }) {
               </XStack>
               <XStack gap="$3">
                 <YStack gap="$2" f={1}>
-                  <XStack gap="$2">
+                  <XStack gap="$2" ai="center">
                     <Lock size={15} color="$orange500" />
                     <Text>Contraseña</Text>
-                    <Text col="$amber700">*</Text>
+                    {editing ? (
+                      <Text col="$secondaryText" fos="$2">(Opcional, dejar en blanco para mantener)</Text>
+                    ) : (
+                      <Text col="$amber700">*</Text>
+                    )}
                   </XStack>
                   <form.Field name="password">
                     {(field) => (
@@ -341,10 +351,10 @@ export function UserDialog({ editing = null }: { editing: User | null }) {
               </XStack>
               <XStack gap="$3">
                 <YStack gap="$2" f={1}>
-                  <XStack gap="$2">
+                  <XStack gap="$2" ai="center">
                     <Lock size={15} color="$orange500" />
                     <Text>Confirmar Contraseña</Text>
-                    <Text col="$amber700">*</Text>
+                    {!editing && <Text col="$amber700">*</Text>}
                   </XStack>
                   <form.Field name="passwordConfirm">
                     {(field) => (
@@ -431,9 +441,8 @@ export function UserDialog({ editing = null }: { editing: User | null }) {
                           !username ||
                           !phone ||
                           !role ||
-                          !password ||
-                          password.length < 8 ||
-                          password !== passwordConfirm
+                          (!editing && !password) ||
+                          (password ? (password.length < 8 || password !== passwordConfirm) : false)
                         }
                         backgroundImage="linear-gradient(to right, var(--brandMain), var(--orange500))"
                         hoverStyle={{ scale: 1.02 }}

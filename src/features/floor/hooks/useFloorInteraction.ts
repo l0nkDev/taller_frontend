@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Konva from 'konva';
 
 export const useFloorInteraction = (floor: any, optState: string) => {
@@ -10,6 +10,11 @@ export const useFloorInteraction = (floor: any, optState: string) => {
   const [isWallMode, setIsWallMode] = useState(false);
   const [selectedWallId, setSelectedWallId] = useState<number | null>(null);
   const [newWallPoints, setNewWallPoints] = useState<number[] | null>(null);
+
+  const baseCenter = useRef<{ x: number; y: number } | null>(null);
+  const baseDist = useRef<number>(0);
+  const baseScale = useRef<number>(1);
+  const basePos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
   const gridSize = 20;
   const snap = (v: number) => Math.round(v / gridSize) * gridSize;
@@ -24,25 +29,94 @@ export const useFloorInteraction = (floor: any, optState: string) => {
 
   const handleWheel = (e: Konva.KonvaEventObject<WheelEvent>) => {
     e.evt.preventDefault();
-    const scaleBy = 1.1;
     const stage = e.target.getStage();
     if (!stage) return;
 
-    const oldScale = stage.scaleX();
-    const pointer = stage.getPointerPosition();
-    if (!pointer) return;
+    if (e.evt.ctrlKey) {
+      const oldScale = stage.scaleX();
+      const pointer = stage.getPointerPosition();
+      if (!pointer) return;
 
-    const mousePointTo = {
-      x: (pointer.x - stage.x()) / oldScale,
-      y: (pointer.y - stage.y()) / oldScale,
-    };
+      const mousePointTo = {
+        x: (pointer.x - stage.x()) / oldScale,
+        y: (pointer.y - stage.y()) / oldScale,
+      };
 
-    const newScale = e.evt.deltaY > 0 ? oldScale / scaleBy : oldScale * scaleBy;
-    setStageScale(newScale);
-    setStagePos({
-      x: pointer.x - mousePointTo.x * newScale,
-      y: pointer.y - mousePointTo.y * newScale,
-    });
+      const newScale = Math.max(0.1, Math.min(oldScale * Math.pow(0.999, e.evt.deltaY), 10));
+      
+      setStageScale(newScale);
+      setStagePos({
+        x: pointer.x - mousePointTo.x * newScale,
+        y: pointer.y - mousePointTo.y * newScale,
+      });
+    } else {
+      setStagePos((prev) => ({
+        x: prev.x - e.evt.deltaX,
+        y: prev.y - e.evt.deltaY,
+      }));
+    }
+  };
+
+  const handleTouchMove = (e: Konva.KonvaEventObject<TouchEvent>) => {
+    e.evt.preventDefault();
+    const touch1 = e.evt.touches[0];
+    const touch2 = e.evt.touches[1];
+
+    if (touch1 && touch2) {
+      const stage = e.target.getStage();
+      if (!stage) return;
+
+      if (stage.isDragging()) {
+        stage.stopDrag();
+      }
+
+      const rect = stage.container().getBoundingClientRect();
+      const p1 = { x: touch1.clientX - rect.left, y: touch1.clientY - rect.top };
+      const p2 = { x: touch2.clientX - rect.left, y: touch2.clientY - rect.top };
+
+      const getDistance = (pA: { x: number; y: number }, pB: { x: number; y: number }) => {
+        return Math.sqrt(Math.pow(pB.x - pA.x, 2) + Math.pow(pB.y - pA.y, 2));
+      };
+
+      const getCenter = (pA: { x: number; y: number }, pB: { x: number; y: number }) => {
+        return {
+          x: (pA.x + pB.x) / 2,
+          y: (pA.y + pB.y) / 2,
+        };
+      };
+
+      const dist = getDistance(p1, p2);
+      const center = getCenter(p1, p2);
+
+      if (!baseCenter.current) {
+        baseCenter.current = center;
+        baseDist.current = dist;
+        baseScale.current = stage.scaleX();
+        basePos.current = { x: stage.x(), y: stage.y() };
+        return;
+      }
+
+      const scaleBy = dist / baseDist.current;
+      const newScale = Math.max(0.1, Math.min(baseScale.current * scaleBy, 10));
+
+      const pointTo = {
+        x: (baseCenter.current.x - basePos.current.x) / baseScale.current,
+        y: (baseCenter.current.y - basePos.current.y) / baseScale.current,
+      };
+
+      const newPos = {
+        x: baseCenter.current.x - pointTo.x * newScale + (center.x - baseCenter.current.x),
+        y: baseCenter.current.y - pointTo.y * newScale + (center.y - baseCenter.current.y),
+      };
+
+      setStageScale(newScale);
+      setStagePos(newPos);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    baseCenter.current = null;
+    baseDist.current = 0;
   };
 
   const checkDeselect = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
@@ -103,6 +177,8 @@ export const useFloorInteraction = (floor: any, optState: string) => {
     newWallPoints,
     setNewWallPoints,
     handleWheel,
+    handleTouchMove,
+    handleTouchEnd,
     checkDeselect,
     handleNodeSelect,
     snap,

@@ -33,8 +33,8 @@ import {
   Send,
   Blocks,
   RefreshCcw,
-  Map,
   Sparkles,
+  X as XIcon,
 } from '@tamagui/lucide-icons';
 import {
   useGetFloorPlanQuery,
@@ -144,8 +144,12 @@ export function FloorView() {
       {!isError ? (
         <>
           <YStack mb="$5">
-            <ScrollView showsHorizontalScrollIndicator={false}>
-              <XStack gap="$2" flexWrap="wrap">
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ minWidth: '100%' }}
+            >
+              <XStack gap="$2">
                 {isFetching ? (
                   // Mostramos placeholders si los pisos aún no cargan
                   <>
@@ -210,7 +214,6 @@ function InteractiveFloorMap({ floorId }: { floorId: number }) {
     previewPositions,
     setPreviewPositions,
     showHeatmap,
-    setShowHeatmap,
     heatmapData,
     runOptimization,
     applyOptimization,
@@ -233,6 +236,8 @@ function InteractiveFloorMap({ floorId }: { floorId: number }) {
     newWallPoints,
     setNewWallPoints,
     handleWheel,
+    handleTouchMove,
+    handleTouchEnd,
     checkDeselect,
     handleNodeSelect,
     snap,
@@ -478,133 +483,139 @@ function InteractiveFloorMap({ floorId }: { floorId: number }) {
   return (
     <YStack f={1} gap="$4">
       <XStack f={1} gap="$5">
-        <YStack f={1} gap="$3">
-          <XStack
-            gap="$3"
-            p="$2"
-            bg="$cardBg"
-            bw={2}
-            boc="$cardBorder"
-            br="$4"
-            ai="center"
-            jc="space-between"
+        <YStack f={1} gap="$3" $sm={shouldShowSidebar ? { display: 'none' } : {}}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            w="100%"
+            contentContainerStyle={{ minWidth: '100%' }}
           >
-            <XStack gap="$3" ai="center">
-              {isWallMode && (
-                <>
-                  <Button size="$3" onPress={() => setNewWallPoints(null)}>
-                    Cancelar Dibujo
-                  </Button>
-                  {selectedWallId && (
-                    <>
-                      <Button
-                        size="$3"
-                        onPress={() => {
-                          const w = floor?.walls.find((x) => x.id === selectedWallId);
-                          if (w) updateWall({ wallId: w.id, floor_id: floorId, isDoor: !w.isDoor });
-                        }}
-                      >
-                        Alternar Puerta
-                      </Button>
-                      <Button
-                        size="$3"
-                        icon={Trash}
-                        onPress={() => {
-                          deleteWall(selectedWallId);
-                          setSelectedWallId(null);
-                        }}
-                      >
-                        Eliminar
-                      </Button>
-                    </>
-                  )}
-                </>
-              )}
-              {isEditMode && (
-                <>
-                  <Button size="$3" icon={PlusSquare} onPress={handleAddTable}>
-                    Nueva Mesa
-                  </Button>
-                  <Button
-                    size="$3"
-                    icon={Combine}
-                    onPress={handleGroup}
-                    disabled={selectedIds.length < 2}
-                    opacity={selectedIds.length < 2 ? 0.5 : 1}
-                  >
-                    Agrupar
-                  </Button>
-                  <Button
-                    size="$3"
-                    icon={Split}
-                    onPress={handleUngroupOrDelete}
-                    disabled={selectedIds.length !== 1}
-                    opacity={selectedIds.length !== 1 ? 0.5 : 1}
-                  >
-                    {btnUngroupText}
-                  </Button>
-                </>
-              )}
+            <XStack
+              minWidth="100%"
+              gap="$3"
+              p="$2"
+              bg="$cardBg"
+              bw={2}
+              boc="$cardBorder"
+              br="$4"
+              ai="center"
+              jc="space-between"
+            >
+              <XStack gap="$3" ai="center">
+                {isWallMode && (
+                  <>
+                    <Button size="$3" onPress={() => setNewWallPoints(null)}>
+                      Cancelar Dibujo
+                    </Button>
+                    {selectedWallId && (
+                      <>
+                        <Button
+                          size="$3"
+                          onPress={() => {
+                            const w = floor?.walls.find((x) => x.id === selectedWallId);
+                            if (w)
+                              updateWall({ wallId: w.id, floor_id: floorId, isDoor: !w.isDoor });
+                          }}
+                        >
+                          Alternar Puerta
+                        </Button>
+                        <Button
+                          size="$3"
+                          icon={Trash}
+                          onPress={() => {
+                            deleteWall(selectedWallId);
+                            setSelectedWallId(null);
+                          }}
+                        >
+                          Eliminar
+                        </Button>
+                      </>
+                    )}
+                  </>
+                )}
+                {isEditMode && (
+                  <>
+                    <Button size="$3" icon={PlusSquare} onPress={handleAddTable}>
+                      Nueva Mesa
+                    </Button>
+                    <Button
+                      size="$3"
+                      icon={Combine}
+                      onPress={handleGroup}
+                      disabled={selectedIds.length < 2}
+                      opacity={selectedIds.length < 2 ? 0.5 : 1}
+                    >
+                      Agrupar
+                    </Button>
+                    <Button
+                      size="$3"
+                      icon={Split}
+                      onPress={handleUngroupOrDelete}
+                      disabled={selectedIds.length !== 1}
+                      opacity={selectedIds.length !== 1 ? 0.5 : 1}
+                    >
+                      {btnUngroupText}
+                    </Button>
+                  </>
+                )}
+              </XStack>
+              <XStack gap="$3" ai="center">
+                <Button
+                  size="$3"
+                  icon={isWallMode ? Lock : Pencil}
+                  onPress={() => {
+                    setIsWallMode(!isWallMode);
+                    setIsEditMode(false);
+                    setSelectedIds([]);
+                    setSelectedWallId(null);
+                    setNewWallPoints(null);
+                  }}
+                >
+                  {isWallMode ? 'Terminar Paredes' : 'Editar Paredes'}
+                </Button>
+                <Button
+                  size="$3"
+                  icon={isEditMode ? Lock : Pencil}
+                  onPress={() => {
+                    setIsEditMode(!isEditMode);
+                    setIsWallMode(false);
+                    setSelectedIds([]);
+                    setSelectedWallId(null);
+                    setNewWallPoints(null);
+                  }}
+                >
+                  {isEditMode ? 'Bloquear Mesas' : 'Editar Mesas'}
+                </Button>
+                {optState === 'preview' ? (
+                  <>
+                    <Button size="$3" onPress={applyOptimization}>
+                      Aplicar
+                    </Button>
+                    <Button
+                      size="$3"
+                      onPress={() => {
+                        setOptState('idle');
+                        setPreviewPositions({});
+                      }}
+                    >
+                      Cancelar
+                    </Button>
+                  </>
+                ) : (
+                  role === 'admin' && (
+                    <Button
+                      size="$3"
+                      icon={Sparkles}
+                      onPress={runOptimization}
+                      disabled={optState === 'optimizing'}
+                    >
+                      {optState === 'optimizing' ? 'Calculando...' : 'Auto-Distribuir'}
+                    </Button>
+                  )
+                )}
+              </XStack>
             </XStack>
-            <XStack gap="$3" ai="center" flexWrap="wrap">
-              <Button
-                size="$3"
-                icon={isWallMode ? Lock : Pencil}
-                onPress={() => {
-                  setIsWallMode(!isWallMode);
-                  setIsEditMode(false);
-                  setSelectedIds([]);
-                  setSelectedWallId(null);
-                  setNewWallPoints(null);
-                }}
-              >
-                {isWallMode ? 'Terminar Paredes' : 'Editar Paredes'}
-              </Button>
-              <Button
-                size="$3"
-                icon={isEditMode ? Lock : Pencil}
-                onPress={() => {
-                  setIsEditMode(!isEditMode);
-                  setIsWallMode(false);
-                  setSelectedIds([]);
-                  setSelectedWallId(null);
-                  setNewWallPoints(null);
-                }}
-              >
-                {isEditMode ? 'Bloquear Mesas' : 'Editar Mesas'}
-              </Button>
-              <Button size="$3" icon={Map} onPress={() => setShowHeatmap(!showHeatmap)}>
-                {showHeatmap ? 'Ocultar Heatmap' : 'Ver Heatmap'}
-              </Button>
-              {optState === 'preview' ? (
-                <>
-                  <Button size="$3" onPress={applyOptimization}>
-                    Aplicar
-                  </Button>
-                  <Button
-                    size="$3"
-                    onPress={() => {
-                      setOptState('idle');
-                      setPreviewPositions({});
-                    }}
-                  >
-                    Cancelar
-                  </Button>
-                </>
-              ) : (
-                role === 'admin' && (
-                  <Button
-                    size="$3"
-                    icon={Sparkles}
-                    onPress={runOptimization}
-                    disabled={optState === 'optimizing'}
-                  >
-                    {optState === 'optimizing' ? 'Calculando...' : 'Auto-Distribuir'}
-                  </Button>
-                )
-              )}
-            </XStack>
-          </XStack>
+          </ScrollView>
 
           <Card bw={2} boc="$cardBorder" bg="$cardBg" br="$6" f={1}>
             <YStack f={1} overflow="hidden">
@@ -616,6 +627,7 @@ function InteractiveFloorMap({ floorId }: { floorId: number }) {
                   flexDirection: 'column',
                   width: '100%',
                   height: '100%',
+                  touchAction: 'none',
                   borderRadius: '$6',
                   backgroundSize: `${snap(10) * stageScale}px ${snap(10) * stageScale}px`,
                   backgroundPosition: `${stagePos.x}px ${stagePos.y}px`,
@@ -626,228 +638,261 @@ function InteractiveFloorMap({ floorId }: { floorId: number }) {
                   backgroundColor: '#ffffff',
                 }}
               >
-                <Stage
-                  ref={stageRef}
-                  width={dimensions.width}
-                  height={dimensions.height}
-                  draggable={!isWallMode && !isEditMode}
-                  scaleX={stageScale}
-                  scaleY={stageScale}
-                  x={stagePos.x}
-                  y={stagePos.y}
-                  onWheel={handleWheel}
-                  onDragEnd={(e) => {
-                    if (e.target === e.target.getStage())
-                      setStagePos({ x: e.target.x(), y: e.target.y() });
-                  }}
-                  onMouseDown={(e) => {
-                    checkDeselect(e);
-                    if (isWallMode) {
-                      const pos = e.target.getStage()?.getPointerPosition();
-                      if (pos) {
-                        const logicalX = snap((pos.x - stagePos.x) / stageScale);
-                        const logicalY = snap((pos.y - stagePos.y) / stageScale);
-                        if (!newWallPoints) {
-                          if (e.target === e.target.getStage()) {
+                {dimensions.width > 0 && dimensions.height > 0 && (
+                  <Stage
+                    ref={stageRef}
+                    width={dimensions.width}
+                    height={dimensions.height}
+                    draggable={!isWallMode}
+                    scaleX={stageScale}
+                    scaleY={stageScale}
+                    x={stagePos.x}
+                    y={stagePos.y}
+                    onWheel={handleWheel}
+                    onDragEnd={(e) => {
+                      if (e.target === e.target.getStage())
+                        setStagePos({ x: e.target.x(), y: e.target.y() });
+                    }}
+                    onMouseDown={(e) => {
+                      checkDeselect(e);
+                      if (isWallMode) {
+                        const pos = e.target.getStage()?.getPointerPosition();
+                        if (pos) {
+                          const logicalX = snap((pos.x - stagePos.x) / stageScale);
+                          const logicalY = snap((pos.y - stagePos.y) / stageScale);
+                          if (!newWallPoints) {
+                            if (e.target === e.target.getStage()) {
+                              setNewWallPoints([logicalX, logicalY, logicalX, logicalY]);
+                            }
+                          } else {
+                            createWall({
+                              floor_id: floorId,
+                              x1: newWallPoints[0],
+                              y1: newWallPoints[1],
+                              x2: logicalX,
+                              y2: logicalY,
+                              isDoor: false,
+                            });
                             setNewWallPoints([logicalX, logicalY, logicalX, logicalY]);
                           }
-                        } else {
-                          createWall({
-                            floor_id: floorId,
-                            x1: newWallPoints[0],
-                            y1: newWallPoints[1],
-                            x2: logicalX,
-                            y2: logicalY,
-                            isDoor: false,
-                          });
-                          setNewWallPoints([logicalX, logicalY, logicalX, logicalY]);
                         }
                       }
-                    }
-                  }}
-                  onMouseMove={(e) => {
-                    if (isWallMode && newWallPoints) {
-                      const pos = e.target.getStage()?.getPointerPosition();
-                      if (pos) {
-                        const logicalX = snap((pos.x - stagePos.x) / stageScale);
-                        const logicalY = snap((pos.y - stagePos.y) / stageScale);
-                        setNewWallPoints([newWallPoints[0], newWallPoints[1], logicalX, logicalY]);
+                    }}
+                    onMouseMove={(e) => {
+                      if (isWallMode && newWallPoints) {
+                        const pos = e.target.getStage()?.getPointerPosition();
+                        if (pos) {
+                          const logicalX = snap((pos.x - stagePos.x) / stageScale);
+                          const logicalY = snap((pos.y - stagePos.y) / stageScale);
+                          setNewWallPoints([
+                            newWallPoints[0],
+                            newWallPoints[1],
+                            logicalX,
+                            logicalY,
+                          ]);
+                        }
                       }
-                    }
-                  }}
-                  onTouchStart={checkDeselect}
-                  style={{ cursor: isWallMode ? 'crosshair' : 'grab' }}
-                >
-                  <Layer>
-                    <WallLayer
-                      floor={floor}
-                      floorId={floorId}
-                      isWallMode={isWallMode}
-                      setSelectedWallId={setSelectedWallId}
-                      newWallPoints={newWallPoints}
-                      snap={snap}
-                      dragBoundFunc={dragBoundFunc}
-                      stageScale={stageScale}
-                      stagePos={stagePos}
-                    />
+                    }}
+                    onTouchStart={checkDeselect}
+                    onTouchMove={handleTouchMove}
+                    onTouchEnd={handleTouchEnd}
+                    style={{ cursor: isWallMode ? 'crosshair' : 'grab' }}
+                  >
+                    <Layer>
+                      <WallLayer
+                        floor={floor}
+                        floorId={floorId}
+                        isWallMode={isWallMode}
+                        setSelectedWallId={setSelectedWallId}
+                        newWallPoints={newWallPoints}
+                        snap={snap}
+                        dragBoundFunc={dragBoundFunc}
+                        stageScale={stageScale}
+                        stagePos={stagePos}
+                      />
 
-                    <HeatmapLayer
-                      showHeatmap={showHeatmap}
-                      optState={optState}
-                      heatmapData={heatmapData}
-                    />
+                      <HeatmapLayer
+                        showHeatmap={showHeatmap}
+                        optState={optState}
+                        heatmapData={heatmapData}
+                      />
 
-                    {floor.table_groups?.map((group) => {
-                      const groupId = `group-${group.id}`;
-                      const groupHasActiveOrder = activeOrders?.some(
-                        (o) => o.tablegroup_id === group.id,
-                      );
-                      const displayX = previewPositions[group.id]?.x ?? group.pos_x;
-                      const displayY = previewPositions[group.id]?.y ?? group.pos_y;
-                      const displayRot = previewPositions[group.id]?.rotation ?? group.rotation;
-                      return (
-                        <Group
-                          key={groupId}
-                          id={groupId}
-                          x={displayX}
-                          y={displayY}
-                          rotation={displayRot}
-                          draggable={isEditMode}
-                          dragBoundFunc={dragBoundFunc}
-                          onClick={(e) => {
-                            e.cancelBubble = true;
-                            handleNodeSelect(e.currentTarget, e.evt.shiftKey);
-                          }}
-                          onDragEnd={(e) => {
-                            if (e.target !== e.currentTarget) return;
-                            e.cancelBubble = true;
-                            updateGroup({
-                              groupId: group.id,
-                              floor_id: floorId,
-                              pos_x: e.target.x(),
-                              pos_y: e.target.y(),
-                            });
-                          }}
-                          onTransformEnd={(e) => {
-                            if (e.target !== e.currentTarget) return;
-                            const node = e.target;
-                            const scaleX = node.scaleX();
-                            const scaleY = node.scaleY();
-                            node.scaleX(1);
-                            node.scaleY(1);
-
-                            if (group.current_tables.length === 1) {
-                              const innerTable = group.current_tables[0];
-                              const newWidth = snap(
-                                Math.max(20, Math.abs((innerTable.width || 60) * scaleX)),
-                              );
-                              const newHeight = snap(
-                                Math.max(20, Math.abs((innerTable.height || 60) * scaleY)),
-                              );
-                              const newOffsetX = (innerTable.offset_x || 0) * scaleX;
-                              const newOffsetY = (innerTable.offset_y || 0) * scaleY;
-
-                              const groupNode = e.target
-                                .getStage()
-                                ?.findOne(`#table-${innerTable.id}`) as Konva.Group;
-                              if (groupNode && typeof groupNode.findOne === 'function') {
-                                groupNode.setAttr('width', newWidth);
-                                groupNode.setAttr('height', newHeight);
-                                groupNode.setAttr('x', newOffsetX);
-                                groupNode.setAttr('y', newOffsetY);
-
-                                const rect = groupNode.findOne('Rect');
-                                if (rect) {
-                                  rect.setAttr('width', newWidth);
-                                  rect.setAttr('height', newHeight);
-                                }
-                                const text = groupNode.findOne('Text');
-                                if (text) {
-                                  text.setAttr('width', newWidth);
-                                  text.setAttr('height', newHeight);
-                                }
-                              }
-
-                              updateTable({
-                                tableId: innerTable.id,
-                                floor_id: floorId,
-                                width: newWidth,
-                                height: newHeight,
-                                offset_x: node.x(),
-                                offset_y: node.y(),
-                                rotation: node.rotation(),
-                              });
-                            } else {
+                      {floor.table_groups?.map((group) => {
+                        const groupId = `group-${group.id}`;
+                        const groupHasActiveOrder = activeOrders?.some(
+                          (o) => o.tablegroup_id === group.id,
+                        );
+                        const displayX = previewPositions[group.id]?.x ?? group.pos_x;
+                        const displayY = previewPositions[group.id]?.y ?? group.pos_y;
+                        const displayRot = previewPositions[group.id]?.rotation ?? group.rotation;
+                        return (
+                          <Group
+                            key={groupId}
+                            id={groupId}
+                            x={displayX}
+                            y={displayY}
+                            rotation={displayRot}
+                            draggable={isEditMode}
+                            dragBoundFunc={dragBoundFunc}
+                            onClick={(e) => {
+                              e.cancelBubble = true;
+                              handleNodeSelect(e.currentTarget, e.evt.shiftKey);
+                            }}
+                            onTap={(e) => {
+                              e.cancelBubble = true;
+                              handleNodeSelect(e.currentTarget, false);
+                            }}
+                            onDragEnd={(e) => {
+                              if (e.target !== e.currentTarget) return;
+                              e.cancelBubble = true;
                               updateGroup({
                                 groupId: group.id,
                                 floor_id: floorId,
-                                pos_x: node.x(),
-                                pos_y: node.y(),
-                                rotation: node.rotation(),
+                                pos_x: e.target.x(),
+                                pos_y: e.target.y(),
                               });
-                            }
-                          }}
-                        >
-                          {group.current_tables?.map((table) => (
-                            <TableNode
-                              key={`table-${table.id}`}
-                              table={table}
-                              isSelected={
-                                selectedIds.includes(`table-${table.id}`) ||
-                                selectedIds.includes(groupId)
+                            }}
+                            onTransformEnd={(e) => {
+                              if (e.target !== e.currentTarget) return;
+                              const node = e.target;
+                              const scaleX = node.scaleX();
+                              const scaleY = node.scaleY();
+                              node.scaleX(1);
+                              node.scaleY(1);
+
+                              if (group.current_tables.length === 1) {
+                                const innerTable = group.current_tables[0];
+                                const newWidth = snap(
+                                  Math.max(20, Math.abs((innerTable.width || 60) * scaleX)),
+                                );
+                                const newHeight = snap(
+                                  Math.max(20, Math.abs((innerTable.height || 60) * scaleY)),
+                                );
+                                const newOffsetX = (innerTable.offset_x || 0) * scaleX;
+                                const newOffsetY = (innerTable.offset_y || 0) * scaleY;
+
+                                const groupNode = e.target
+                                  .getStage()
+                                  ?.findOne(`#table-${innerTable.id}`) as Konva.Group;
+                                if (groupNode && typeof groupNode.findOne === 'function') {
+                                  groupNode.setAttr('width', newWidth);
+                                  groupNode.setAttr('height', newHeight);
+                                  groupNode.setAttr('x', newOffsetX);
+                                  groupNode.setAttr('y', newOffsetY);
+
+                                  const rect = groupNode.findOne('Rect');
+                                  if (rect) {
+                                    rect.setAttr('width', newWidth);
+                                    rect.setAttr('height', newHeight);
+                                  }
+                                  const text = groupNode.findOne('Text');
+                                  if (text) {
+                                    text.setAttr('width', newWidth);
+                                    text.setAttr('height', newHeight);
+                                  }
+                                }
+
+                                updateTable({
+                                  tableId: innerTable.id,
+                                  floor_id: floorId,
+                                  width: newWidth,
+                                  height: newHeight,
+                                  offset_x: node.x(),
+                                  offset_y: node.y(),
+                                  rotation: node.rotation(),
+                                });
+                              } else {
+                                updateGroup({
+                                  groupId: group.id,
+                                  floor_id: floorId,
+                                  pos_x: node.x(),
+                                  pos_y: node.y(),
+                                  rotation: node.rotation(),
+                                });
                               }
-                              onSelect={handleNodeSelect}
-                              hasActiveOrder={!!groupHasActiveOrder}
-                            />
-                          ))}
-                        </Group>
-                      );
-                    })}
-                    {showTransformer && (
-                      <Transformer
-                        ref={transformerRef}
-                        flipEnabled={false}
-                        enabledAnchors={
-                          disableScale
-                            ? []
-                            : [
-                                'top-left',
-                                'top-center',
-                                'top-right',
-                                'middle-right',
-                                'bottom-right',
-                                'bottom-center',
-                                'bottom-left',
-                                'middle-left',
-                              ]
-                        }
-                        resizeEnabled={!disableScale}
-                        boundBoxFunc={(oldBox, newBox) => {
-                          if (newBox.width < 20 || newBox.height < 20) return oldBox;
-                          return newBox;
-                        }}
-                      />
-                    )}
-                  </Layer>
-                </Stage>
+                            }}
+                          >
+                            {group.current_tables?.map((table) => (
+                              <TableNode
+                                key={`table-${table.id}`}
+                                table={table}
+                                isSelected={
+                                  selectedIds.includes(`table-${table.id}`) ||
+                                  selectedIds.includes(groupId)
+                                }
+                                onSelect={handleNodeSelect}
+                                hasActiveOrder={!!groupHasActiveOrder}
+                              />
+                            ))}
+                          </Group>
+                        );
+                      })}
+                      {showTransformer && (
+                        <Transformer
+                          ref={transformerRef}
+                          flipEnabled={false}
+                          enabledAnchors={
+                            disableScale
+                              ? []
+                              : [
+                                  'top-left',
+                                  'top-center',
+                                  'top-right',
+                                  'middle-right',
+                                  'bottom-right',
+                                  'bottom-center',
+                                  'bottom-left',
+                                  'middle-left',
+                                ]
+                          }
+                          resizeEnabled={!disableScale}
+                          boundBoxFunc={(oldBox, newBox) => {
+                            if (newBox.width < 20 || newBox.height < 20) return oldBox;
+                            return newBox;
+                          }}
+                        />
+                      )}
+                    </Layer>
+                  </Stage>
+                )}
               </div>
             </YStack>
           </Card>
         </YStack>
 
         {shouldShowSidebar && (
-          <YStack bw={2} boc="$cardBorder" bg="$cardBg" br="$6" overflow="hidden" w={350}>
+          <YStack
+            bw={2}
+            boc="$cardBorder"
+            bg="$cardBg"
+            br="$6"
+            overflow="hidden"
+            w={350}
+            $sm={{ w: '100%', flex: 1, bw: 0, br: 0 }}
+          >
             <XStack
               w="100%"
               backgroundImage="linear-gradient(to right, var(--brandMain), var(--orange500))"
               p="$3"
               gap="$3"
               ai="center"
+              jc="space-between"
             >
-              <ShoppingCart col="$white" size={20} />
-              <Text col="$white" fow="500">
-                {displayLabel}
-              </Text>
+              <XStack ai="center" gap="$3">
+                <ShoppingCart col="$white" size={20} />
+                <Text col="$white" fow="500">
+                  {displayLabel}
+                </Text>
+              </XStack>
+              <Button
+                size="$3"
+                circular
+                bg="transparent"
+                icon={<XIcon col="$white" size={20} />}
+                onPress={() => setSelectedIds([])}
+                display="none"
+                $sm={{ display: 'flex' }}
+              />
             </XStack>
 
             <Tabs

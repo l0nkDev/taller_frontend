@@ -1,4 +1,4 @@
-import { ElementType } from 'react';
+import { ElementType, useState } from 'react';
 import { YStack, XStack, Button, Text } from 'tamagui';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
@@ -6,9 +6,11 @@ import {
   ShoppingCart,
   MenuSquare,
   Users,
-  User,
   LineChart,
   History,
+  Menu as MenuIcon,
+  X as XIcon,
+  LogOut,
 } from '@tamagui/lucide-icons';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { logout } from '../../store/authSlice';
@@ -17,10 +19,12 @@ function SidebarItem({
   path,
   icon: Icon,
   label,
+  onPress,
 }: {
   path: string;
   icon: ElementType;
   label: string;
+  onPress?: () => void;
 }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -39,7 +43,10 @@ function SidebarItem({
       opacity={isActive ? 1 : 0.5}
       hoverStyle={{ backgroundColor: '#FFFFFF0A', opacity: 1 }}
       cursor="pointer"
-      onPress={() => navigate(path)}
+      onPress={() => {
+        navigate(path);
+        if (onPress) onPress();
+      }}
       style={{ transition: 'all 0.15s ease-in-out' }}
     >
       <Icon size={24} color="white" />
@@ -54,6 +61,7 @@ export default function MainLayout() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const user = useAppSelector((state) => state.auth.user);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -64,6 +72,14 @@ export default function MainLayout() {
     <YStack h="100vh" bg="saddleBrown">
       <XStack jc="space-between" ai="center" px="$6" py="$4">
         <XStack ai="center" gap="$3">
+          <Button
+            size="$3"
+            bg="transparent"
+            icon={<MenuIcon size={24} color="white" />}
+            onPress={() => setIsSidebarOpen(true)}
+            display="none"
+            $sm={{ display: 'flex' }}
+          />
           <YStack
             w={40}
             h={40}
@@ -89,17 +105,14 @@ export default function MainLayout() {
             bg="transparent"
             bw={1}
             boc="$amber200"
-            icon={<User size={16} color="white" />}
+            icon={<LogOut size={16} color="white" />}
             onPress={handleLogout}
-          >
-            <Text color="white" fos="$3">
-              Cerrar Sesión
-            </Text>
-          </Button>
+            hoverStyle={{ backgroundColor: '#FFFFFF0A', opacity: 1 }}
+          />
         </XStack>
       </XStack>
       <XStack f={1}>
-        <YStack w={100} px="$2" py="$4" gap="$2">
+        <YStack w={100} px="$2" py="$4" gap="$2" display="flex" $sm={{ display: 'none' }}>
           {(!user || user.role === 'admin' || user.role === 'waiter') && (
             <SidebarItem path="/floorplan" icon={LayoutGrid} label="Plano de piso" />
           )}
@@ -129,6 +142,95 @@ export default function MainLayout() {
           <Outlet />
         </YStack>
       </XStack>
+
+      {/* Mobile Sidebar Overlay */}
+      {isSidebarOpen && (
+        <>
+          <YStack
+            position="absolute"
+            top={0}
+            left={0}
+            right={0}
+            bottom={0}
+            bg="rgba(0,0,0,0.5)"
+            zIndex={99999}
+            onPress={() => setIsSidebarOpen(false)}
+            display="none"
+            $sm={{ display: 'flex' }}
+          />
+          <YStack
+            position="absolute"
+            top={0}
+            left={0}
+            bottom={0}
+            w={120}
+            bg="saddleBrown"
+            zIndex={100000}
+            px="$2"
+            py="$4"
+            gap="$2"
+            display="none"
+            $sm={{ display: 'flex' }}
+            shadowColor="#000"
+            shadowOffset={{ width: 4, height: 0 }}
+            shadowOpacity={0.2}
+            shadowRadius={10}
+          >
+            <XStack jc="flex-end" px="$2" mb="$2">
+              <Button
+                size="$3"
+                bg="transparent"
+                icon={<XIcon size={24} color="white" />}
+                onPress={() => setIsSidebarOpen(false)}
+              />
+            </XStack>
+            {(!user || user.role === 'admin' || user.role === 'waiter') && (
+              <SidebarItem
+                path="/floorplan"
+                icon={LayoutGrid}
+                label="Plano"
+                onPress={() => setIsSidebarOpen(false)}
+              />
+            )}
+            {(!user || user.role === 'admin' || user.role === 'kitchen') && (
+              <SidebarItem
+                path="/orders"
+                icon={ShoppingCart}
+                label="Órdenes"
+                onPress={() => setIsSidebarOpen(false)}
+              />
+            )}
+            {(!user || user.role === 'admin') && (
+              <>
+                <SidebarItem
+                  path="/menu"
+                  icon={MenuSquare}
+                  label="Menú"
+                  onPress={() => setIsSidebarOpen(false)}
+                />
+                <SidebarItem
+                  path="/users"
+                  icon={Users}
+                  label="Usuarios"
+                  onPress={() => setIsSidebarOpen(false)}
+                />
+                <SidebarItem
+                  path="/bi"
+                  icon={LineChart}
+                  label="Dashboard"
+                  onPress={() => setIsSidebarOpen(false)}
+                />
+                <SidebarItem
+                  path="/history"
+                  icon={History}
+                  label="Historial"
+                  onPress={() => setIsSidebarOpen(false)}
+                />
+              </>
+            )}
+          </YStack>
+        </>
+      )}
     </YStack>
   );
 }

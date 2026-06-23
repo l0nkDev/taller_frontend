@@ -394,7 +394,8 @@ export function BIView() {
                         {rec.dish_name}
                       </Text>
                       <Text color="$gray500" fos="$3">
-                        {rec.reason}
+                        Tu producto cuesta el {100 - Math.round(rec.margin_percentage * 100)}% de su
+                        precio de venta. Puedes rebajarlo para aumentar la demanda.
                       </Text>
                     </YStack>
                     <YStack ai="flex-end" gap="$2">

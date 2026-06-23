@@ -258,7 +258,9 @@ export const useLayoutOptimizer = (floor: any, floorId: number) => {
                 if (val === 1) {
                   penalty += 100000;
                 } else if (val === 2) {
-                  heatSum += 500; // Soft constraint: huge penalty but won't crash the placement
+                  heatSum += 500; // Traffic lane penalty
+                } else if (val === 3) {
+                  heatSum += 200; // Preferred spacing soft penalty
                 }
                 heatSum += heatmap[cell.r * cols + cell.c];
               }
@@ -315,8 +317,13 @@ export const useLayoutOptimizer = (floor: any, floorId: number) => {
               const locX = lx * rcos - ly * rsin;
               const locY = lx * rsin + ly * rcos;
               if (locX >= -20 && locX <= w + 20 && locY >= -20 && locY <= h + 20) {
-                // 20px padding between tables
+                // 20px hard limit padding
                 LOCAL_SET_GRID(cc, rr, 1);
+              } else if (locX >= -40 && locX <= w + 40 && locY >= -40 && locY <= h + 40) {
+                // 40px preferred soft padding
+                if (LOCAL_GRID(cc, rr) !== 1) {
+                  LOCAL_SET_GRID(cc, rr, 3);
+                }
               }
             }
           }

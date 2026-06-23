@@ -1,4 +1,4 @@
-import { YStack, XStack, Text, H2, View } from 'tamagui';
+import { YStack, XStack, Text, H2, View, ScrollView } from 'tamagui';
 import { CookingPot, ConciergeBell, User, Check } from '@tamagui/lucide-icons';
 import { useGetUsersQuery } from '../../api/usersApi';
 import { UserTable } from './components/UserTable';
@@ -17,7 +17,8 @@ export function UsersView() {
         </Text>
       </YStack>
       <YStack gap="$5">
-        <XStack gap="$4">
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ minWidth: '100%' }}>
+          <XStack gap="$4" minWidth="100%" pb="$2">
           <XStack
             p="$5"
             bw={2}
@@ -107,6 +108,7 @@ export function UsersView() {
             </View>
           </XStack>
         </XStack>
+        </ScrollView>
         <UserTable />
       </YStack>
     </YStack>

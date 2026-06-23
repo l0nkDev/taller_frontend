@@ -1,12 +1,12 @@
-import { YStack, XStack, Text, H2, Button, ScrollView } from 'tamagui';
+import { YStack, XStack, Text, H2, Button, ScrollView, View } from 'tamagui';
 import { useState } from 'react';
 import { useGetCategoriesQuery, useGetDishesQuery } from '../../api/dishesApi';
 import { MenuDialog } from './components/MenuDialog';
 import { CategoryDialog } from './components/CategoryDialog';
 
 export function MenuView() {
-  const { data: dishes } = useGetDishesQuery();
-  const { data: categories } = useGetCategoriesQuery();
+  const { data: dishes, isLoading: isLoadingDishes } = useGetDishesQuery();
+  const { data: categories, isLoading: isLoadingCategories } = useGetCategoriesQuery();
   const [filter, setFilter] = useState(0);
 
   return (
@@ -23,8 +23,19 @@ export function MenuView() {
         <MenuDialog editing={null} />
       </XStack>
 
-      <ScrollView showsHorizontalScrollIndicator={false}>
-        <XStack gap="$2" mb="$5" flexWrap="wrap">
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        <XStack gap="$2" mb="$5">
+          {isLoadingCategories &&
+            Array.from({ length: 4 }).map((_, i) => (
+              <View
+                key={`cat-skel-${i}`}
+                h={52}
+                w={100}
+                br="$5"
+                bg="$gray300"
+                className="animate-pulse"
+              />
+            ))}
           {categories && (
             <Button
               onPress={() => setFilter(0)}
@@ -49,6 +60,42 @@ export function MenuView() {
         </XStack>
       </ScrollView>
       <XStack gap="$5" flexWrap="wrap">
+        {isLoadingDishes &&
+          Array.from({ length: 8 }).map((_, i) => (
+            <XStack
+              key={`dish-skel-${i}`}
+              p="$4"
+              bw={2}
+              boc="$cardBorder"
+              bg="$cardBg"
+              br="$6"
+              w="100%"
+              $gtSm={{ w: 'calc(50% - 15px)' }}
+              $gtMd={{ w: 'calc(33.333% - 20px)' }}
+              $gtLg={{ w: 'calc(25% - 20px)' }}
+            >
+              <YStack f={1} jc="space-between">
+                <YStack gap="$3">
+                  <XStack jc="space-between" ai="center">
+                    <View h={24} w="60%" br="$2" bg="$gray300" className="animate-pulse" />
+                    <View h={24} w="20%" br="$3" bg="$gray300" className="animate-pulse" />
+                  </XStack>
+                  <View h={18} w="90%" br="$2" bg="$gray200" className="animate-pulse" />
+                  <View h={18} w="70%" br="$2" bg="$gray200" className="animate-pulse" />
+                </YStack>
+                <YStack mt="$4">
+                  <XStack gap="$3" ai="center" mb="$3">
+                    <YStack gap="$2">
+                      <View h={20} w={80} br="$2" bg="$gray300" className="animate-pulse" />
+                      <View h={16} w={60} br="$2" bg="$gray200" className="animate-pulse" />
+                    </YStack>
+                    <View h={24} w={80} br="$3" bg="$gray300" className="animate-pulse" opacity={0.5} />
+                  </XStack>
+                  <View h={44} w="100%" br="$3" bg="$gray200" className="animate-pulse" />
+                </YStack>
+              </YStack>
+            </XStack>
+          ))}
         {dishes &&
           dishes.map((d) =>
             filter === 0 || filter === d.category_id ? (

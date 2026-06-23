@@ -26,6 +26,10 @@ export function TableNode({
         e.cancelBubble = true;
         onSelect(e.currentTarget, e.evt.shiftKey);
       }}
+      onTap={(e) => {
+        e.cancelBubble = true;
+        onSelect(e.currentTarget, false);
+      }}
     >
       <Rect
         width={table.width || 60}
