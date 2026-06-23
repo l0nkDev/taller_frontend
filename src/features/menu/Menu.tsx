@@ -89,7 +89,14 @@ export function MenuView() {
                       <View h={20} w={80} br="$2" bg="$gray300" className="animate-pulse" />
                       <View h={16} w={60} br="$2" bg="$gray200" className="animate-pulse" />
                     </YStack>
-                    <View h={24} w={80} br="$3" bg="$gray300" className="animate-pulse" opacity={0.5} />
+                    <View
+                      h={24}
+                      w={80}
+                      br="$3"
+                      bg="$gray300"
+                      className="animate-pulse"
+                      opacity={0.5}
+                    />
                   </XStack>
                   <View h={44} w="100%" br="$3" bg="$gray200" className="animate-pulse" />
                 </YStack>

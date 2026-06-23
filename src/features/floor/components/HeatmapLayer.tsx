@@ -15,10 +15,10 @@ export function HeatmapLayer({ showHeatmap, optState, heatmapData }: any) {
     canvas.width = cols * CELL;
     canvas.height = rows * CELL;
     const ctx = canvas.getContext('2d');
-    
+
     if (ctx) {
-      for (let r = 0; r < rows; r++) {
-        for (let c = 0; c < cols; c++) {
+      for (let r = 0; r < rows; r += 1) {
+        for (let c = 0; c < cols; c += 1) {
           const val = heatmap[r * cols + c];
           if (val !== 1000000) {
             const ratio = val / maxVal;
@@ -40,11 +40,7 @@ export function HeatmapLayer({ showHeatmap, optState, heatmapData }: any) {
 
   return (
     <Group opacity={0.4} listening={false}>
-      <KonvaImage
-        x={heatmapData.minX}
-        y={heatmapData.minY}
-        image={image}
-      />
+      <KonvaImage x={heatmapData.minX} y={heatmapData.minY} image={image} />
     </Group>
   );
 }

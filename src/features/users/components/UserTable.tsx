@@ -107,76 +107,98 @@ export function UserTable() {
 
   return (
     <>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ minWidth: '100%' }}>
-        <XStack minWidth="100%" px="$5" py="$3" bw={2} boc="$cardBorder" bg="$cardBg" br="$6" ai="center" gap="$3">
-        <XStack ai="center" pos="relative" f={1}>
-          <YStack pos="absolute" l={12} zi={1}>
-            <Search size={20} />
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ minWidth: '100%' }}
+      >
+        <XStack
+          minWidth="100%"
+          px="$5"
+          py="$3"
+          bw={2}
+          boc="$cardBorder"
+          bg="$cardBg"
+          br="$6"
+          ai="center"
+          gap="$3"
+        >
+          <XStack ai="center" pos="relative" f={1}>
+            <YStack pos="absolute" l={12} zi={1}>
+              <Search size={20} />
+            </YStack>
+            <Input
+              fos="$5"
+              f={1}
+              pl={45}
+              bw={2}
+              bc="$cardBorder"
+              bg="$cardBg"
+              outlineStyle="none"
+              outlineColor="transparent"
+              focusStyle={{
+                boc: '$brandMain',
+              }}
+              placeholder="Buscar..."
+              value={searchArg}
+              onChangeText={(v: string) => setSearchArg(v.toLowerCase())}
+            />
+          </XStack>
+          <YStack>
+            <Select defaultValue="ANY" value={roleArg} onValueChange={setRoleArg}>
+              <Select.Trigger bw={2} w={180}>
+                <Select.Value placeholder="Todos los roles" fos="$5" />
+                <ChevronDown pl="$3" />
+              </Select.Trigger>
+              <Select.FocusScope loop trapped focusOnIdle>
+                <Select.Content>
+                  <Select.ScrollUpButton />
+                  <Select.Viewport bw={2}>
+                    <Select.Group>
+                      <Select.Item
+                        index={0}
+                        value="any"
+                        hoverStyle={{ backgroundColor: '$gray200' }}
+                      >
+                        <Select.ItemText fos="$5">Todos los roles</Select.ItemText>
+                      </Select.Item>
+                      <Select.Item
+                        index={1}
+                        value="admin"
+                        hoverStyle={{ backgroundColor: '$gray200' }}
+                      >
+                        <Select.ItemText fos="$5">Admin</Select.ItemText>
+                      </Select.Item>
+                      <Select.Item
+                        index={2}
+                        value="waiter"
+                        hoverStyle={{ backgroundColor: '$gray200' }}
+                      >
+                        <Select.ItemText fos="$5">Waiter</Select.ItemText>
+                      </Select.Item>
+                      <Select.Item
+                        index={3}
+                        value="kitchen"
+                        hoverStyle={{ backgroundColor: '$gray200' }}
+                      >
+                        <Select.ItemText fos="$5">Kitchen</Select.ItemText>
+                      </Select.Item>
+                    </Select.Group>
+                  </Select.Viewport>
+                  <Select.ScrollDownButton />
+                </Select.Content>
+              </Select.FocusScope>
+            </Select>
           </YStack>
-          <Input
-            fos="$5"
-            f={1}
-            pl={45}
-            bw={2}
-            bc="$cardBorder"
-            bg="$cardBg"
-            outlineStyle="none"
-            outlineColor="transparent"
-            focusStyle={{
-              boc: '$brandMain',
-            }}
-            placeholder="Buscar..."
-            value={searchArg}
-            onChangeText={(v: string) => setSearchArg(v.toLowerCase())}
-          />
-        </XStack>
-        <YStack>
-          <Select defaultValue="ANY" value={roleArg} onValueChange={setRoleArg}>
-            <Select.Trigger bw={2} w={180}>
-              <Select.Value placeholder="Todos los roles" fos="$5" />
-              <ChevronDown pl="$3" />
-            </Select.Trigger>
-            <Select.FocusScope loop trapped focusOnIdle>
-              <Select.Content>
-                <Select.ScrollUpButton />
-                <Select.Viewport bw={2}>
-                  <Select.Group>
-                    <Select.Item index={0} value="any" hoverStyle={{ backgroundColor: '$gray200' }}>
-                      <Select.ItemText fos="$5">Todos los roles</Select.ItemText>
-                    </Select.Item>
-                    <Select.Item
-                      index={1}
-                      value="admin"
-                      hoverStyle={{ backgroundColor: '$gray200' }}
-                    >
-                      <Select.ItemText fos="$5">Admin</Select.ItemText>
-                    </Select.Item>
-                    <Select.Item
-                      index={2}
-                      value="waiter"
-                      hoverStyle={{ backgroundColor: '$gray200' }}
-                    >
-                      <Select.ItemText fos="$5">Waiter</Select.ItemText>
-                    </Select.Item>
-                    <Select.Item
-                      index={3}
-                      value="kitchen"
-                      hoverStyle={{ backgroundColor: '$gray200' }}
-                    >
-                      <Select.ItemText fos="$5">Kitchen</Select.ItemText>
-                    </Select.Item>
-                  </Select.Group>
-                </Select.Viewport>
-                <Select.ScrollDownButton />
-              </Select.Content>
-            </Select.FocusScope>
-          </Select>
-        </YStack>
-        <UserDialog editing={null} />
+          <UserDialog editing={null} />
         </XStack>
       </ScrollView>
       <YStack bg="$cardBg" br="$6" bw={2} boc="$cardBorder" overflow="hidden" elevation="$1">
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ minWidth: '100%' }}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ minWidth: '100%' }}
+        >
           <YStack minWidth={800} f={1} width="100%">
             <XStack
               backgroundImage="linear-gradient(to bottom right, var(--amber100), var(--orange100))"
@@ -198,7 +220,15 @@ export function UserTable() {
               <Text f={1.2} fb={0} minWidth={120} fos="$5" fontWeight="bold" color="$secondaryText">
                 Estado
               </Text>
-              <Text f={1} fb={0} minWidth={100} fos="$5" fontWeight="bold" color="$secondaryText" ta="center">
+              <Text
+                f={1}
+                fb={0}
+                minWidth={100}
+                fos="$5"
+                fontWeight="bold"
+                color="$secondaryText"
+                ta="center"
+              >
                 Acciones
               </Text>
             </XStack>
@@ -230,7 +260,15 @@ export function UserTable() {
                       boc="$cardBorder"
                       hoverStyle={{ bg: '$bgGradientStart' }}
                     >
-                      <XStack f={2.5} fb={0} minWidth={250} ai="center" gap="$3" overflow="hidden" pr="$3">
+                      <XStack
+                        f={2.5}
+                        fb={0}
+                        minWidth={250}
+                        ai="center"
+                        gap="$3"
+                        overflow="hidden"
+                        pr="$3"
+                      >
                         <Circle size={40} bg="$amber50" bw={1} boc="$amber200">
                           <UserIcon size={20} color="$brandMain" />
                         </Circle>

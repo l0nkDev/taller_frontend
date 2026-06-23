@@ -42,8 +42,8 @@ export const useFloorInteraction = (floor: any, optState: string) => {
         y: (pointer.y - stage.y()) / oldScale,
       };
 
-      const newScale = Math.max(0.1, Math.min(oldScale * Math.pow(0.999, e.evt.deltaY), 10));
-      
+      const newScale = Math.max(0.1, Math.min(oldScale * 0.999 ** e.evt.deltaY, 10));
+
       setStageScale(newScale);
       setStagePos({
         x: pointer.x - mousePointTo.x * newScale,
@@ -75,7 +75,7 @@ export const useFloorInteraction = (floor: any, optState: string) => {
       const p2 = { x: touch2.clientX - rect.left, y: touch2.clientY - rect.top };
 
       const getDistance = (pA: { x: number; y: number }, pB: { x: number; y: number }) => {
-        return Math.sqrt(Math.pow(pB.x - pA.x, 2) + Math.pow(pB.y - pA.y, 2));
+        return Math.sqrt((pB.x - pA.x) ** 2 + (pB.y - pA.y) ** 2);
       };
 
       const getCenter = (pA: { x: number; y: number }, pB: { x: number; y: number }) => {

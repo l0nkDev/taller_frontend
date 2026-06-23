@@ -38,12 +38,19 @@ export function UserDialog({ editing = null }: { editing: User | null }) {
       if (!value.fname || !value.lname || !value.username || !value.phone || !value.role) {
         return;
       }
-      
+
       if (!editing) {
-        if (!value.password || value.password.length < 8 || value.password !== value.passwordConfirm) return;
-      } else {
-        if (value.password && (value.password.length < 8 || value.password !== value.passwordConfirm)) return;
-      }
+        if (
+          !value.password ||
+          value.password.length < 8 ||
+          value.password !== value.passwordConfirm
+        )
+          return;
+      } else if (
+        value.password &&
+        (value.password.length < 8 || value.password !== value.passwordConfirm)
+      )
+        return;
 
       const submitData: Record<string, any> = { ...value };
       if (editing && !submitData.password) {
@@ -311,7 +318,9 @@ export function UserDialog({ editing = null }: { editing: User | null }) {
                     <Lock size={15} color="$orange500" />
                     <Text>Contraseña</Text>
                     {editing ? (
-                      <Text col="$secondaryText" fos="$2">(Opcional, dejar en blanco para mantener)</Text>
+                      <Text col="$secondaryText" fos="$2">
+                        (Opcional, dejar en blanco para mantener)
+                      </Text>
                     ) : (
                       <Text col="$amber700">*</Text>
                     )}
@@ -442,7 +451,7 @@ export function UserDialog({ editing = null }: { editing: User | null }) {
                           !phone ||
                           !role ||
                           (!editing && !password) ||
-                          (password ? (password.length < 8 || password !== passwordConfirm) : false)
+                          (password ? password.length < 8 || password !== passwordConfirm : false)
                         }
                         backgroundImage="linear-gradient(to right, var(--brandMain), var(--orange500))"
                         hoverStyle={{ scale: 1.02 }}

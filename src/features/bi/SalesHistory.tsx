@@ -48,7 +48,11 @@ export function SalesHistoryView() {
       </H2>
 
       <Card bw={1} boc="$cardBorder" bg="$cardBg" p="$4">
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ minWidth: '100%' }}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ minWidth: '100%' }}
+        >
           <XStack gap="$4" ai="flex-end" minWidth="100%">
             <YStack minWidth={150}>
               <Text fos="$2" color="$secondaryText" mb="$1">
@@ -126,7 +130,12 @@ export function SalesHistoryView() {
           </View>
         ) : (
           <YStack f={1}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} f={1} contentContainerStyle={{ minWidth: '100%' }}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              f={1}
+              contentContainerStyle={{ minWidth: '100%' }}
+            >
               <YStack f={1} minWidth={800}>
                 <XStack bg="$gray3" p="$3" borderBottomWidth={1} boc="$cardBorder" ai="center">
                   <Text f={1.5} fb={0} minWidth={150} fontWeight="bold" fos="$3">
@@ -146,46 +155,54 @@ export function SalesHistoryView() {
                   </Text>
                 </XStack>
 
-            <ScrollView f={1}>
-              {historyData?.items.map((item, index) => (
-                <YStack
-                  key={item.order_id}
-                  borderBottomWidth={index === historyData.items.length - 1 ? 0 : 1}
-                  boc="$cardBorder"
-                >
-                  <XStack p="$3" ai="center" hoverStyle={{ bg: '$gray2' }}>
-                    <Text f={1.5} fb={0} minWidth={150} fos="$3">
-                      {new Date(item.created_at).toLocaleString()}
-                    </Text>
-                    <Text f={1} fb={0} minWidth={100} fos="$3" color="$secondaryText">
-                      #{item.order_id}
-                    </Text>
-                    <YStack f={3} fb={0} minWidth={300}>
-                      {item.dish_names.map((dish, i) => (
-                        <Text key={i} fos="$3" color="$secondaryText">
-                          • {dish}
+                <ScrollView f={1}>
+                  {historyData?.items.map((item, index) => (
+                    <YStack
+                      key={item.order_id}
+                      borderBottomWidth={index === historyData.items.length - 1 ? 0 : 1}
+                      boc="$cardBorder"
+                    >
+                      <XStack p="$3" ai="center" hoverStyle={{ bg: '$gray2' }}>
+                        <Text f={1.5} fb={0} minWidth={150} fos="$3">
+                          {new Date(item.created_at).toLocaleString()}
                         </Text>
-                      ))}
+                        <Text f={1} fb={0} minWidth={100} fos="$3" color="$secondaryText">
+                          #{item.order_id}
+                        </Text>
+                        <YStack f={3} fb={0} minWidth={300}>
+                          {item.dish_names.map((dish, i) => (
+                            <Text key={i} fos="$3" color="$secondaryText">
+                              • {dish}
+                            </Text>
+                          ))}
+                        </YStack>
+                        <Text f={1} fb={0} minWidth={100} fos="$3">
+                          {item.method === 'C' ? 'Efectivo' : 'QR'}
+                        </Text>
+                        <Text
+                          f={1.2}
+                          fb={0}
+                          minWidth={120}
+                          fos="$4"
+                          fontWeight="bold"
+                          color="$green600"
+                          ta="right"
+                        >
+                          {item.total.toFixed(2)}
+                        </Text>
+                      </XStack>
                     </YStack>
-                    <Text f={1} fb={0} minWidth={100} fos="$3">
-                      {item.method === 'C' ? 'Efectivo' : 'QR'}
-                    </Text>
-                    <Text f={1.2} fb={0} minWidth={120} fos="$4" fontWeight="bold" color="$green600" ta="right">
-                      {item.total.toFixed(2)}
-                    </Text>
-                  </XStack>
-                </YStack>
-              ))}
-              {historyData?.items.length === 0 && (
-                <View p="$6" ai="center">
-                  <Text color="$secondaryText">
-                    No se encontraron ventas para los filtros seleccionados.
-                  </Text>
-                </View>
-              )}
-              </ScrollView>
-            </YStack>
-          </ScrollView>
+                  ))}
+                  {historyData?.items.length === 0 && (
+                    <View p="$6" ai="center">
+                      <Text color="$secondaryText">
+                        No se encontraron ventas para los filtros seleccionados.
+                      </Text>
+                    </View>
+                  )}
+                </ScrollView>
+              </YStack>
+            </ScrollView>
 
             {historyData && historyData.total_pages > 1 && (
               <XStack
