@@ -1,22 +1,17 @@
-import { X, CookingPot, Plus, Save, LayoutGrid } from "@tamagui/lucide-icons";
-import { Button, Dialog, XStack, YStack, Text, View, Input } from "tamagui";
-import { useState } from "react";
-import { useForm } from "@tanstack/react-form";
-import { floorApi, FloorRead } from "../../../api/floorApi";
-import { Skeleton } from "../../../components/Skeleton";
+import { X, CookingPot, Plus, Save, LayoutGrid } from '@tamagui/lucide-icons';
+import { Button, Dialog, XStack, YStack, Text, View, Input } from 'tamagui';
+import { useState } from 'react';
+import { useForm } from '@tanstack/react-form';
+import { floorApi, FloorRead } from '../../../api/floorApi';
+import { Skeleton } from '../../../components/Skeleton';
 
-export const PlaceholderFloorDialog = () => 
-          (<Button
-            p="$4"
-            bw={2}
-            boc={"$cardBorder"}
-            bg={"$cardBg"}
-            br="$5"
-            ai={"center"}
-            jc={"space-between"}
-          >
-            <Skeleton width={70} height={16} shape="rectangular" borderRadius="$4" />
-          </Button>)
+export function PlaceholderFloorDialog() {
+  return (
+    <Button p="$4" bw={2} boc="$cardBorder" bg="$cardBg" br="$5" ai="center" jc="space-between">
+      <Skeleton width={70} height={16} shape="rectangular" borderRadius="$4" />
+    </Button>
+  );
+}
 
 export function FloorDialog({
   floor,
@@ -32,11 +27,11 @@ export function FloorDialog({
   const [open, setOpen] = useState(false);
   const form = useForm({
     defaultValues: {
-      name: floor ? floor.name : "",
+      name: floor ? floor.name : '',
     },
     onSubmit: async ({ value }) => {
       if (!floor && !value.name) return;
-      console.log("Sending to FastAPI:", value);
+      console.log('Sending to FastAPI:', value);
       if (floor)
         await updateFloor({
           id: floor.id,
@@ -51,7 +46,7 @@ export function FloorDialog({
     <>
       {floor ? (
         <div
-          style={{ display: "contents" }}
+          style={{ display: 'contents' }}
           onContextMenu={(e) => {
             e.preventDefault();
             setOpen(true);
@@ -62,13 +57,13 @@ export function FloorDialog({
             onPress={() => setSelectedId && setSelectedId(floor.id)}
             p="$4"
             bw={2}
-            boc={selectedId === floor.id ? "saddleBrown" : "$cardBorder"}
-            bg={selectedId === floor.id ? "saddleBrown" : "$cardBg"}
+            boc={selectedId === floor.id ? 'saddleBrown' : '$cardBorder'}
+            bg={selectedId === floor.id ? 'saddleBrown' : '$cardBg'}
             br="$5"
-            ai={"center"}
-            jc={"space-between"}
+            ai="center"
+            jc="space-between"
           >
-            <Text fow={500} col={selectedId === floor.id ? "white" : undefined}>
+            <Text fow={500} col={selectedId === floor.id ? 'white' : undefined}>
               {floor.name}
             </Text>
           </Button>
@@ -77,10 +72,10 @@ export function FloorDialog({
         <Button
           onPress={() => setOpen(true)}
           br="$5"
-          ai={"center"}
-          jc={"space-between"}
+          ai="center"
+          jc="space-between"
           backgroundImage="linear-gradient(to right, var(--brandMain), var(--orange500))"
-          color={"white"}
+          color="white"
           icon={<Plus />}
         />
       )}
@@ -95,7 +90,7 @@ export function FloorDialog({
           />
           <Dialog.Content
             bw={2}
-            boc={"$cardBorder"}
+            boc="$cardBorder"
             p={0}
             onPointerDownOutside={(event: any) => {
               event.preventDefault();
@@ -110,31 +105,24 @@ export function FloorDialog({
             >
               <XStack
                 backgroundImage="linear-gradient(to right, var(--brandMain), var(--orange500))"
-                p={"$5"}
-                ai={"center"}
-                jc={"space-between"}
-                btrr={"$3"}
-                btlr={"$3"}
+                p="$5"
+                ai="center"
+                jc="space-between"
+                btrr="$3"
+                btlr="$3"
               >
-                <XStack gap={"$3"}>
-                  <View
-                    w={"$4"}
-                    h={"$4"}
-                    br={"$5"}
-                    bc={"#FFFFFF33"}
-                    ai={"center"}
-                    jc={"center"}
-                  >
-                    <LayoutGrid col={"$white"} />
+                <XStack gap="$3">
+                  <View w="$4" h="$4" br="$5" bc="#FFFFFF33" ai="center" jc="center">
+                    <LayoutGrid col="$white" />
                   </View>
                   <YStack>
-                    <Text col={"$white"} fos={"$7"} fow={500} mb={"$2"}>
-                      {floor ? "Renombrar piso" : "Crear piso"}
+                    <Text col="$white" fos="$7" fow={500} mb="$2">
+                      {floor ? 'Renombrar piso' : 'Crear piso'}
                     </Text>
-                    <Text col={"$amber100"} fos={"$4"}>
+                    <Text col="$amber100" fos="$4">
                       {floor
                         ? `Actualiza el nombre de ${floor.name}`
-                        : "¿Cómo se llamará el nuevo piso?"}
+                        : '¿Cómo se llamará el nuevo piso?'}
                     </Text>
                   </YStack>
                 </XStack>
@@ -144,22 +132,21 @@ export function FloorDialog({
                     circular
                     chromeless
                     icon={<X color="$white" size={24} />}
-                    hoverStyle={{ bg: "rgba(255,255,255,0.1)" }}
+                    hoverStyle={{ bg: 'rgba(255,255,255,0.1)' }}
                   />
                 </Dialog.Close>
               </XStack>
-              <YStack gap={"$3"} p={"$5"}>
-                <YStack gap={"$2"}>
-                  <XStack gap={"$2"} ai={"center"}>
-                    <CookingPot size={15} color={"$orange500"} />
+              <YStack gap="$3" p="$5">
+                <YStack gap="$2">
+                  <XStack gap="$2" ai="center">
+                    <CookingPot size={15} color="$orange500" />
                     <Text>Nombre</Text>
-                    <Text col={"$amber700"}>*</Text>
+                    <Text col="$amber700">*</Text>
                   </XStack>
-                  <form.Field
-                    name="name"
-                    children={(field) => (
+                  <form.Field name="name">
+                    {(field) => (
                       <Input
-                        fos={"$5"}
+                        fos="$5"
                         f={1}
                         bw={2}
                         bc="$cardBorder"
@@ -167,7 +154,7 @@ export function FloorDialog({
                         outlineStyle="none"
                         outlineColor="transparent"
                         focusStyle={{
-                          boc: "$brandMain",
+                          boc: '$brandMain',
                         }}
                         placeholder="Salón"
                         value={field.state.value}
@@ -175,9 +162,9 @@ export function FloorDialog({
                         onBlur={field.handleBlur}
                       />
                     )}
-                  />
+                  </form.Field>
                 </YStack>
-                <XStack gap={"$3"}>
+                <XStack gap="$3">
                   <Dialog.Close asChild>
                     <Button
                       f={1}
@@ -197,7 +184,7 @@ export function FloorDialog({
                     hoverStyle={{ scale: 1.02 }}
                     disabledStyle={{ opacity: 0.5 }}
                   >
-                    <Save col="white"></Save>
+                    <Save col="white" />
                     <Text col="white" fontWeight="600" fontFamily="$body">
                       Guardar piso
                     </Text>

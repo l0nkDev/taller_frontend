@@ -1,8 +1,8 @@
-import { Group, Rect, Text as KText } from "react-konva";
-import Konva from "konva";
+import { Group, Rect, Text as KText } from 'react-konva';
+import Konva from 'konva';
 import { TableRead } from '../../../api/floorApi';
 
-export const TableNode = ({
+export function TableNode({
   table,
   isSelected,
   onSelect,
@@ -12,7 +12,7 @@ export const TableNode = ({
   isSelected: boolean;
   onSelect: (node: Konva.Node, isShiftPressed: boolean) => void;
   hasActiveOrder: boolean;
-}) => {
+}) {
   return (
     <Group
       id={`table-${table.id}`}
@@ -30,8 +30,8 @@ export const TableNode = ({
       <Rect
         width={table.width || 60}
         height={table.height || 60}
-        fill={hasActiveOrder ? "#ef4444" : "#4CAF50"}
-        stroke={isSelected ? "#1976D2" : hasActiveOrder ? "#b91c1c" : "#388E3C"}
+        fill={hasActiveOrder ? '#ef4444' : '#4CAF50'}
+        stroke={isSelected ? '#1976D2' : hasActiveOrder ? '#b91c1c' : '#388E3C'}
         strokeWidth={isSelected ? 3 : 2}
         cornerRadius={5}
         shadowBlur={5}
@@ -50,4 +50,4 @@ export const TableNode = ({
       />
     </Group>
   );
-};
+}

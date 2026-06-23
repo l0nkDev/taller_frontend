@@ -1,14 +1,23 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { User } from "../api/usersApi";
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+
+export interface User {
+  id: number;
+  username: string;
+  fname: string;
+  lname: string;
+  phone: string;
+  role: string;
+  is_active: boolean;
+}
 
 interface AuthState {
   token: string | null;
-  user: User | null; 
+  user: User | null;
 }
 
-const initialAuthState: AuthState = { 
-  token: localStorage.getItem('token') || null, 
-  user: JSON.parse(localStorage.getItem('user') || 'null') 
+const initialAuthState: AuthState = {
+  token: localStorage.getItem('token') || null,
+  user: JSON.parse(localStorage.getItem('user') || 'null'),
 };
 
 const authSlice = createSlice({

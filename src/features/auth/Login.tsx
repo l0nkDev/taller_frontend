@@ -1,27 +1,18 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import {
-  YStack,
-  Button,
-  Text,
-  Card,
-  Spinner,
-  Label,
-  XStack,
-  H1
-} from "tamagui";
-import { useLoginMutation } from "../../api/authApi";
-import { useAppDispatch } from "../../store/hooks";
-import { setCredentials } from "../../store/authSlice";
-import { Lock, EyeOff, Eye, User } from "@tamagui/lucide-icons";
-import { Input } from "../../components/Input";
-import { isFetchBaseQueryError } from "../../utils/errorHelpers";
-import { useToastController } from "@tamagui/toast";
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { YStack, Button, Text, Card, Spinner, Label, XStack, H1 } from 'tamagui';
+import { Lock, EyeOff, Eye, User } from '@tamagui/lucide-icons';
+import { useToastController } from '@tamagui/toast';
+import { useLoginMutation } from '../../api/authApi';
+import { useAppDispatch } from '../../store/hooks';
+import { setCredentials } from '../../store/authSlice';
+import { Input } from '../../components/Input';
+import { isFetchBaseQueryError } from '../../utils/errorHelpers';
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
 
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -39,45 +30,32 @@ export default function Login() {
           user: data.user,
         }),
       );
-      navigate("/dashboard");
+      navigate('/dashboard');
     } catch (err: unknown) {
-      console.error("FastAPI Login Error:", err);
+      console.error('FastAPI Login Error:', err);
 
-      let errorMessage = "No se pudo conectar con el servidor.";
+      let errorMessage = 'No se pudo conectar con el servidor.';
 
       if (isFetchBaseQueryError(err)) {
         if (err.status === 401) {
-          errorMessage = "El usuario o la contraseña son incorrectos.";
+          errorMessage = 'El usuario o la contraseña son incorrectos.';
         } else if (err.status === 422) {
-          errorMessage = "Datos de formulario inválidos.";
-        } else if (
-          "data" in err &&
-          typeof err.data === "object" &&
-          err.data !== null
-        ) {
+          errorMessage = 'Datos de formulario inválidos.';
+        } else if ('data' in err && typeof err.data === 'object' && err.data !== null) {
           const backendData = err.data as { detail?: string };
           if (backendData.detail) errorMessage = backendData.detail;
         }
       }
-      toast.show("Error de Acceso", {
+      toast.show('Error de Acceso', {
         message: errorMessage,
-        customData: { type: "error" },
+        customData: { type: 'error' },
       });
     }
   };
 
   return (
     <YStack f={1} jc="center" ai="center" bg="$bgGradientStart" p="$4">
-      <Card
-        bw={2}
-        boc="$cardBorder"
-        bg="$cardBg"
-        p="$8"
-        br="$6"
-        elevation="$4"
-        w="100%"
-        maw={450}
-      >
+      <Card bw={2} boc="$cardBorder" bg="$cardBg" p="$8" br="$6" elevation="$4" w="100%" maw={450}>
         <YStack ai="center" mb="$8" gap="$2">
           <YStack
             w={80}
@@ -97,7 +75,7 @@ export default function Login() {
           </Text>
         </YStack>
 
-        <form style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+        <form style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <YStack gap="$2">
             <Label color="$primaryText" size="$3">
               Usuario
@@ -115,7 +93,7 @@ export default function Login() {
                 outlineStyle="none"
                 outlineColor="transparent"
                 focusStyle={{
-                  boc: "$brandMain",
+                  boc: '$brandMain',
                 }}
                 placeholder="ejemplo123"
                 value={username}
@@ -142,7 +120,7 @@ export default function Login() {
                 bc="$cardBorder"
                 bg="$cardBg"
                 placeholder="••••••••"
-                focusStyle={{ boc: "$brandMain" }}
+                focusStyle={{ boc: '$brandMain' }}
                 secureTextEntry={!showPassword}
                 outlineWidth={0}
               />

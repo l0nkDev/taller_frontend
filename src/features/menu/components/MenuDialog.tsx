@@ -9,22 +9,12 @@ import {
   TextCursor,
   Banknote,
   Check,
-} from "@tamagui/lucide-icons";
-import { useForm } from "@tanstack/react-form";
-import {
-  Button,
-  Dialog,
-  XStack,
-  YStack,
-  Text,
-  View,
-  Select,
-  Separator,
-  Switch,
-} from "tamagui";
-import { Input } from "../../../components/Input";
-import { useState } from "react";
-import { Dish, dishesApi } from "../../../api/dishesApi";
+} from '@tamagui/lucide-icons';
+import { useForm } from '@tanstack/react-form';
+import { Button, Dialog, XStack, YStack, Text, View, Select, Separator, Switch } from 'tamagui';
+import { useState } from 'react';
+import { Input } from '../../../components/Input';
+import { Dish, dishesApi } from '../../../api/dishesApi';
 
 export function MenuDialog({ editing = null }: { editing: Dish | null }) {
   const [createUser] = dishesApi.useCreateDishMutation();
@@ -33,12 +23,12 @@ export function MenuDialog({ editing = null }: { editing: Dish | null }) {
   const { data } = dishesApi.useGetCategoriesQuery();
   const form = useForm({
     defaultValues: {
-      name: editing ? editing.name : "",
-      description: editing ? editing.description : "",
-      price: editing ? String(editing.price) : "0.00",
-      cost: editing && editing.cost ? String(editing.cost) : "0.00",
-      category_id: editing ? String(editing.category_id) : "0",
-      available: editing ? editing.available : true
+      name: editing ? editing.name : '',
+      description: editing ? editing.description : '',
+      price: editing ? String(editing.price) : '0.00',
+      cost: editing && editing.cost ? String(editing.cost) : '0.00',
+      category_id: editing ? String(editing.category_id) : '0',
+      available: editing ? editing.available : true,
     },
     onSubmit: async ({ value }) => {
       if (
@@ -50,10 +40,10 @@ export function MenuDialog({ editing = null }: { editing: Dish | null }) {
           !value.cost ||
           Number(value.cost) < 0 ||
           !value.category_id ||
-          value.category_id === "0")
+          value.category_id === '0')
       )
         return;
-      console.log("Sending to FastAPI:", value);
+      console.log('Sending to FastAPI:', value);
       if (editing)
         await updateUser({
           id: editing.id,
@@ -62,7 +52,7 @@ export function MenuDialog({ editing = null }: { editing: Dish | null }) {
             price: Number(value.price),
             cost: Number(value.cost),
             category_id: Number(value.category_id),
-            available: form.state.values.available
+            available: form.state.values.available,
           },
         });
       else
@@ -71,7 +61,7 @@ export function MenuDialog({ editing = null }: { editing: Dish | null }) {
           price: Number(value.price),
           cost: Number(value.cost),
           category_id: Number(value.category_id),
-          available: form.state.values.available
+          available: form.state.values.available,
         });
       setOpen(false);
     },
@@ -85,7 +75,7 @@ export function MenuDialog({ editing = null }: { editing: Dish | null }) {
             hoverStyle={{ scale: 1.02 }}
             disabledStyle={{ opacity: 0.5 }}
           >
-            <Pencil col="white"></Pencil>
+            <Pencil col="white" />
             <Text col="white" fontWeight="600" fontFamily="$body">
               Editar
             </Text>
@@ -96,7 +86,7 @@ export function MenuDialog({ editing = null }: { editing: Dish | null }) {
             hoverStyle={{ scale: 1.02 }}
             disabledStyle={{ opacity: 0.5 }}
           >
-            <Plus col="white"></Plus>
+            <Plus col="white" />
             <Text col="white" fontWeight="600" fontFamily="$body">
               Agregar plato
             </Text>
@@ -112,9 +102,9 @@ export function MenuDialog({ editing = null }: { editing: Dish | null }) {
           exitStyle={{ opacity: 0 }}
         />
         <Dialog.Content
-          w={"60%"}
+          w="60%"
           bw={2}
-          boc={"$cardBorder"}
+          boc="$cardBorder"
           p={0}
           onPointerDownOutside={(event: any) => {
             event.preventDefault();
@@ -129,31 +119,24 @@ export function MenuDialog({ editing = null }: { editing: Dish | null }) {
           >
             <XStack
               backgroundImage="linear-gradient(to right, var(--brandMain), var(--orange500))"
-              p={"$5"}
-              ai={"center"}
-              jc={"space-between"}
-              btrr={"$3"}
-              btlr={"$3"}
+              p="$5"
+              ai="center"
+              jc="space-between"
+              btrr="$3"
+              btlr="$3"
             >
-              <XStack gap={"$3"}>
-                <View
-                  w={"$4"}
-                  h={"$4"}
-                  br={"$5"}
-                  bc={"#FFFFFF33"}
-                  ai={"center"}
-                  jc={"center"}
-                >
-                  <CookingPot col={"$white"} />
+              <XStack gap="$3">
+                <View w="$4" h="$4" br="$5" bc="#FFFFFF33" ai="center" jc="center">
+                  <CookingPot col="$white" />
                 </View>
                 <YStack>
-                  <Text col={"$white"} fos={"$7"} fow={500} mb={"$2"}>
-                    {editing ? "Editar Plato" : "Nuevo Plato"}
+                  <Text col="$white" fos="$7" fow={500} mb="$2">
+                    {editing ? 'Editar Plato' : 'Nuevo Plato'}
                   </Text>
-                  <Text col={"$amber100"} fos={"$4"}>
+                  <Text col="$amber100" fos="$4">
                     {editing
-                      ? "Actualiza la información del plato"
-                      : "Completa los datos del nuevo plato"}
+                      ? 'Actualiza la información del plato'
+                      : 'Completa los datos del nuevo plato'}
                   </Text>
                 </YStack>
               </XStack>
@@ -163,22 +146,21 @@ export function MenuDialog({ editing = null }: { editing: Dish | null }) {
                   circular
                   chromeless
                   icon={<X color="$white" size={24} />}
-                  hoverStyle={{ bg: "rgba(255,255,255,0.1)" }}
+                  hoverStyle={{ bg: 'rgba(255,255,255,0.1)' }}
                 />
               </Dialog.Close>
             </XStack>
-            <YStack gap={"$3"} p={"$5"}>
-              <YStack gap={"$2"}>
-                <XStack gap={"$2"} ai={"center"}>
-                  <CookingPot size={15} color={"$orange500"} />
+            <YStack gap="$3" p="$5">
+              <YStack gap="$2">
+                <XStack gap="$2" ai="center">
+                  <CookingPot size={15} color="$orange500" />
                   <Text>Nombre</Text>
-                  <Text col={"$amber700"}>*</Text>
+                  <Text col="$amber700">*</Text>
                 </XStack>
-                <form.Field
-                  name="name"
-                  children={(field) => (
+                <form.Field name="name">
+                  {(field) => (
                     <Input
-                      fos={"$5"}
+                      fos="$5"
                       f={1}
                       bw={2}
                       bc="$cardBorder"
@@ -186,7 +168,7 @@ export function MenuDialog({ editing = null }: { editing: Dish | null }) {
                       outlineStyle="none"
                       outlineColor="transparent"
                       focusStyle={{
-                        boc: "$brandMain",
+                        boc: '$brandMain',
                       }}
                       placeholder="Majadito"
                       value={field.state.value}
@@ -194,19 +176,18 @@ export function MenuDialog({ editing = null }: { editing: Dish | null }) {
                       onBlur={field.handleBlur}
                     />
                   )}
-                />
+                </form.Field>
               </YStack>
-              <YStack gap={"$2"}>
-                <XStack gap={"$2"} ai={"center"}>
-                  <TextCursor size={15} color={"$orange500"} />
+              <YStack gap="$2">
+                <XStack gap="$2" ai="center">
+                  <TextCursor size={15} color="$orange500" />
                   <Text>Descripción</Text>
-                  <Text col={"$amber700"}>*</Text>
+                  <Text col="$amber700">*</Text>
                 </XStack>
-                <form.Field
-                  name="description"
-                  children={(field) => (
+                <form.Field name="description">
+                  {(field) => (
                     <Input
-                      fos={"$5"}
+                      fos="$5"
                       numberOfLines={4}
                       f={1}
                       bw={2}
@@ -215,7 +196,7 @@ export function MenuDialog({ editing = null }: { editing: Dish | null }) {
                       outlineStyle="none"
                       outlineColor="transparent"
                       focusStyle={{
-                        boc: "$brandMain",
+                        boc: '$brandMain',
                       }}
                       placeholder="Detalles, ingredientes, etc..."
                       value={field.state.value}
@@ -223,20 +204,19 @@ export function MenuDialog({ editing = null }: { editing: Dish | null }) {
                       onBlur={field.handleBlur}
                     />
                   )}
-                />
+                </form.Field>
               </YStack>
-              <XStack gap={"$3"}>
-                <YStack gap={"$2"} f={1}>
-                  <XStack gap={"$2"} ai={"center"}>
-                    <Banknote size={15} color={"$orange500"} />
+              <XStack gap="$3">
+                <YStack gap="$2" f={1}>
+                  <XStack gap="$2" ai="center">
+                    <Banknote size={15} color="$orange500" />
                     <Text>Precio</Text>
-                    <Text col={"$amber700"}>*</Text>
+                    <Text col="$amber700">*</Text>
                   </XStack>
-                  <form.Field
-                    name="price"
-                    children={(field) => (
+                  <form.Field name="price">
+                    {(field) => (
                       <Input
-                        fos={"$5"}
+                        fos="$5"
                         f={1}
                         bw={2}
                         bc="$cardBorder"
@@ -244,7 +224,7 @@ export function MenuDialog({ editing = null }: { editing: Dish | null }) {
                         outlineStyle="none"
                         outlineColor="transparent"
                         focusStyle={{
-                          boc: "$brandMain",
+                          boc: '$brandMain',
                         }}
                         placeholder="77378759"
                         value={field.state.value}
@@ -252,19 +232,18 @@ export function MenuDialog({ editing = null }: { editing: Dish | null }) {
                         onBlur={field.handleBlur}
                       />
                     )}
-                  />
+                  </form.Field>
                 </YStack>
-                <YStack gap={"$2"} f={1}>
-                  <XStack gap={"$2"} ai={"center"}>
-                    <Banknote size={15} color={"$gray500"} />
+                <YStack gap="$2" f={1}>
+                  <XStack gap="$2" ai="center">
+                    <Banknote size={15} color="$gray500" />
                     <Text>Costo</Text>
-                    <Text col={"$amber700"}>*</Text>
+                    <Text col="$amber700">*</Text>
                   </XStack>
-                  <form.Field
-                    name="cost"
-                    children={(field) => (
+                  <form.Field name="cost">
+                    {(field) => (
                       <Input
-                        fos={"$5"}
+                        fos="$5"
                         f={1}
                         bw={2}
                         bc="$cardBorder"
@@ -272,7 +251,7 @@ export function MenuDialog({ editing = null }: { editing: Dish | null }) {
                         outlineStyle="none"
                         outlineColor="transparent"
                         focusStyle={{
-                          boc: "$brandMain",
+                          boc: '$brandMain',
                         }}
                         placeholder="Costo de prod."
                         value={field.state.value}
@@ -280,42 +259,36 @@ export function MenuDialog({ editing = null }: { editing: Dish | null }) {
                         onBlur={field.handleBlur}
                       />
                     )}
-                  />
+                  </form.Field>
                 </YStack>
-                <YStack gap={"$2"} f={1}>
-                  <XStack gap={"$2"} ai={"center"}>
-                    <Briefcase size={15} color={"$orange500"} />
+                <YStack gap="$2" f={1}>
+                  <XStack gap="$2" ai="center">
+                    <Briefcase size={15} color="$orange500" />
                     <Text>Categoría</Text>
-                    <Text col={"$amber700"}>*</Text>
+                    <Text col="$amber700">*</Text>
                   </XStack>
-                  <form.Field
-                    name="category_id"
-                    children={(field) => (
-                      <Select
-                        value={field.state.value}
-                        onValueChange={field.handleChange}
-                      >
+                  <form.Field name="category_id">
+                    {(field) => (
+                      <Select value={field.state.value} onValueChange={field.handleChange}>
                         <Select.Trigger bw={2} w={180}>
-                          <Select.Value
-                            placeholder="Selecciona una categoría..."
-                            fos={"$5"}
-                          />
-                          <ChevronDown pl={"$3"}></ChevronDown>
+                          <Select.Value placeholder="Selecciona una categoría..." fos="$5" />
+                          <ChevronDown pl="$3" />
                         </Select.Trigger>
-                        <Select.FocusScope loop trapped focusOnIdle={true}>
+                        <Select.FocusScope loop trapped focusOnIdle>
                           <Select.Content zIndex={200000}>
                             <Select.ScrollUpButton />
                             <Select.Viewport bw={2}>
                               <Select.Group>
-                                {data && data.map((c) => <Select.Item
-                                  index={c.id}
-                                  value={String(c.id)}
-                                  hoverStyle={{ backgroundColor: "$gray200" }}
-                                >
-                                  <Select.ItemText fos={"$5"}>
-                                    {c.name}
-                                  </Select.ItemText>
-                                </Select.Item>)}
+                                {data &&
+                                  data.map((c) => (
+                                    <Select.Item
+                                      index={c.id}
+                                      value={String(c.id)}
+                                      hoverStyle={{ backgroundColor: '$gray200' }}
+                                    >
+                                      <Select.ItemText fos="$5">{c.name}</Select.ItemText>
+                                    </Select.Item>
+                                  ))}
                               </Select.Group>
                             </Select.Viewport>
                             <Select.ScrollDownButton />
@@ -323,35 +296,34 @@ export function MenuDialog({ editing = null }: { editing: Dish | null }) {
                         </Select.FocusScope>
                       </Select>
                     )}
-                  />
+                  </form.Field>
                 </YStack>
-                <YStack gap={"$2"} f={1}>
-                  <XStack gap={"$2"} ai={"center"}>
-                    <Check size={15} color={"$orange500"} />
+                <YStack gap="$2" f={1}>
+                  <XStack gap="$2" ai="center">
+                    <Check size={15} color="$orange500" />
                     <Text>Disponible</Text>
-                    <Text col={"$amber700"}>*</Text>
+                    <Text col="$amber700">*</Text>
                   </XStack>
-                  <form.Field
-                    name="available"
-                    children={(field) => (
+                  <form.Field name="available">
+                    {(field) => (
                       <Switch
-                      mt={"$2"}
-                      bw={2} boc={field.state.value ? "$cardBorder" : "$gray200"}
-                      alignSelf="center"
-                      size={"$4"}
+                        mt="$2"
+                        bw={2}
+                        boc={field.state.value ? '$cardBorder' : '$gray200'}
+                        alignSelf="center"
+                        size="$4"
                         checked={!!field.state.value}
                         onCheckedChange={(val) => field.handleChange(val)}
-                        bg={field.state.value ? "$brandMain" : "$gray600"}
+                        bg={field.state.value ? '$brandMain' : '$gray600'}
                       >
-                        <Switch.Thumb animation="bouncy" 
-                      bw={2} boc={"$gray200"}/>
+                        <Switch.Thumb animation="bouncy" bw={2} boc="$gray200" />
                       </Switch>
                     )}
-                  />
+                  </form.Field>
                 </YStack>
               </XStack>
               <Separator bw={1.5} />
-              <XStack gap={"$3"}>
+              <XStack gap="$3">
                 <Dialog.Close asChild>
                   <Button
                     f={1}
@@ -388,15 +360,15 @@ export function MenuDialog({ editing = null }: { editing: Dish | null }) {
                             !cost ||
                             Number(cost) < 0 ||
                             !category_id ||
-                            category_id === "0")
+                            category_id === '0')
                         }
                         backgroundImage="linear-gradient(to right, var(--brandMain), var(--orange500))"
                         hoverStyle={{ scale: 1.02 }}
                         disabledStyle={{ opacity: 0.5 }}
                       >
-                        <Save col="white"></Save>
+                        <Save col="white" />
                         <Text col="white" fontWeight="600" fontFamily="$body">
-                          {editing ? "Guardar cambios" : "Guardar Plato"}
+                          {editing ? 'Guardar cambios' : 'Guardar Plato'}
                         </Text>
                       </Button>
                     );

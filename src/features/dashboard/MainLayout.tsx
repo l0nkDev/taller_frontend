@@ -1,8 +1,6 @@
-import { ElementType } from "react";
-import { YStack, XStack, Button, Text } from "tamagui";
-import { useAppDispatch, useAppSelector } from "../../store/hooks";
-import { logout } from "../../store/authSlice";
-import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { ElementType } from 'react';
+import { YStack, XStack, Button, Text } from 'tamagui';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutGrid,
   ShoppingCart,
@@ -11,9 +9,11 @@ import {
   User,
   LineChart,
   History,
-} from "@tamagui/lucide-icons";
+} from '@tamagui/lucide-icons';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { logout } from '../../store/authSlice';
 
-const SidebarItem = ({
+function SidebarItem({
   path,
   icon: Icon,
   label,
@@ -21,7 +21,7 @@ const SidebarItem = ({
   path: string;
   icon: ElementType;
   label: string;
-}) => {
+}) {
   const navigate = useNavigate();
   const location = useLocation();
   const isActive = location.pathname.startsWith(path);
@@ -33,28 +33,22 @@ const SidebarItem = ({
       br="$4"
       backgroundImage={
         isActive
-          ? "linear-gradient(to bottom right, var(--brandMain), var(--orange500))"
-          : "transparent"
+          ? 'linear-gradient(to bottom right, var(--brandMain), var(--orange500))'
+          : 'transparent'
       }
       opacity={isActive ? 1 : 0.5}
-      hoverStyle={{ backgroundColor: "#FFFFFF0A", opacity: 1 }}
+      hoverStyle={{ backgroundColor: '#FFFFFF0A', opacity: 1 }}
       cursor="pointer"
       onPress={() => navigate(path)}
-      style={{ transition: "all 0.15s ease-in-out" }}
+      style={{ transition: 'all 0.15s ease-in-out' }}
     >
       <Icon size={24} color="white" />
-      <Text
-        color="white"
-        fos="$2"
-        mt="$2"
-        ta="center"
-        fontWeight={isActive ? "bold" : "normal"}
-      >
+      <Text color="white" fos="$2" mt="$2" ta="center" fontWeight={isActive ? 'bold' : 'normal'}>
         {label}
       </Text>
     </YStack>
   );
-};
+}
 
 export default function MainLayout() {
   const dispatch = useAppDispatch();
@@ -63,11 +57,11 @@ export default function MainLayout() {
 
   const handleLogout = () => {
     dispatch(logout());
-    navigate("/login");
+    navigate('/login');
   };
 
   return (
-    <YStack h={"100vh"} bg="saddleBrown">
+    <YStack h="100vh" bg="saddleBrown">
       <XStack jc="space-between" ai="center" px="$6" py="$4">
         <XStack ai="center" gap="$3">
           <YStack
@@ -107,41 +101,17 @@ export default function MainLayout() {
       <XStack f={1}>
         <YStack w={100} px="$2" py="$4" gap="$2">
           {(!user || user.role === 'admin' || user.role === 'waiter') && (
-            <SidebarItem
-              path="/floorplan"
-              icon={LayoutGrid}
-              label="Plano de piso"
-            />
+            <SidebarItem path="/floorplan" icon={LayoutGrid} label="Plano de piso" />
           )}
           {(!user || user.role === 'admin' || user.role === 'kitchen') && (
-            <SidebarItem
-              path="/orders"
-              icon={ShoppingCart}
-              label="Órdenes"
-            />
+            <SidebarItem path="/orders" icon={ShoppingCart} label="Órdenes" />
           )}
           {(!user || user.role === 'admin') && (
             <>
-              <SidebarItem
-                path="/menu"
-                icon={MenuSquare}
-                label="Menú"
-              />
-              <SidebarItem
-                path="/users"
-                icon={Users}
-                label="Usuarios"
-              />
-              <SidebarItem
-                path="/bi"
-                icon={LineChart}
-                label="Dashboard"
-              />
-              <SidebarItem
-                path="/history"
-                icon={History}
-                label="Historial"
-              />
+              <SidebarItem path="/menu" icon={MenuSquare} label="Menú" />
+              <SidebarItem path="/users" icon={Users} label="Usuarios" />
+              <SidebarItem path="/bi" icon={LineChart} label="Dashboard" />
+              <SidebarItem path="/history" icon={History} label="Historial" />
             </>
           )}
           <YStack f={1} />
@@ -156,7 +126,7 @@ export default function MainLayout() {
           shadowRadius={10}
           overflow="hidden"
         >
-            <Outlet />
+          <Outlet />
         </YStack>
       </XStack>
     </YStack>

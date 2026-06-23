@@ -13,7 +13,7 @@ export const useFloorInteraction = (floor: any, optState: string) => {
 
   const gridSize = 20;
   const snap = (v: number) => Math.round(v / gridSize) * gridSize;
-  const dragBoundFunc = (pos: {x: number, y: number}) => {
+  const dragBoundFunc = (pos: { x: number; y: number }) => {
     const logicalX = (pos.x - stagePos.x) / stageScale;
     const logicalY = (pos.y - stagePos.y) / stageScale;
     return {
@@ -27,7 +27,7 @@ export const useFloorInteraction = (floor: any, optState: string) => {
     const scaleBy = 1.1;
     const stage = e.target.getStage();
     if (!stage) return;
-    
+
     const oldScale = stage.scaleX();
     const pointer = stage.getPointerPosition();
     if (!pointer) return;
@@ -45,12 +45,10 @@ export const useFloorInteraction = (floor: any, optState: string) => {
     });
   };
 
-  const checkDeselect = (
-    e: Konva.KonvaEventObject<MouseEvent | TouchEvent>,
-  ) => {
+  const checkDeselect = (e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) => {
     const clickedOnEmpty = e.target === e.target.getStage();
     if (clickedOnEmpty) {
-      if (isEditMode || isWallMode || optState !== "idle") {
+      if (isEditMode || isWallMode || optState !== 'idle') {
         setSelectedIds([]);
       }
       setSelectedWallId(null);
@@ -59,7 +57,7 @@ export const useFloorInteraction = (floor: any, optState: string) => {
 
   const handleNodeSelect = (node: Konva.Node, isShiftPressed: boolean) => {
     const id = node.id();
-    if (id.startsWith("group-")) {
+    if (id.startsWith('group-')) {
       if (isShiftPressed)
         setSelectedIds((prev) =>
           prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id],
@@ -69,25 +67,20 @@ export const useFloorInteraction = (floor: any, optState: string) => {
     }
     const tableIdMatch = id.match(/table-(\d+)/);
     if (tableIdMatch) {
-      const tId = parseInt(tableIdMatch[1]);
+      const tId = parseInt(tableIdMatch[1], 10);
       const parentGroup = floor?.table_groups.find((g: any) =>
         g.current_tables.some((t: any) => t.id === tId),
       );
       if (parentGroup) {
         const groupId = `group-${parentGroup.id}`;
         if (parentGroup.current_tables.length > 1) {
-          if (selectedIds.length === 1 && selectedIds[0] === groupId)
-            setSelectedIds([id]);
+          if (selectedIds.length === 1 && selectedIds[0] === groupId) setSelectedIds([id]);
           else setSelectedIds([groupId]);
-        } else {
-          if (isShiftPressed)
-            setSelectedIds((prev) =>
-              prev.includes(groupId)
-                ? prev.filter((p) => p !== groupId)
-                : [...prev, groupId],
-            );
-          else setSelectedIds([groupId]);
-        }
+        } else if (isShiftPressed)
+          setSelectedIds((prev) =>
+            prev.includes(groupId) ? prev.filter((p) => p !== groupId) : [...prev, groupId],
+          );
+        else setSelectedIds([groupId]);
       }
     }
   };
@@ -113,6 +106,6 @@ export const useFloorInteraction = (floor: any, optState: string) => {
     checkDeselect,
     handleNodeSelect,
     snap,
-    dragBoundFunc
+    dragBoundFunc,
   };
 };

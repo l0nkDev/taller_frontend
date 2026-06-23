@@ -1,10 +1,10 @@
-import { baseApi } from "./baseApi";
+import { baseApi } from './baseApi';
 
 export interface SalesHistoryItem {
   order_id: number;
   created_at: string;
   total: number;
-  method: "C" | "Q";
+  method: 'C' | 'Q';
   dish_names: string[];
 }
 
@@ -86,42 +86,47 @@ export const biApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getSalesHistory: builder.query<PaginatedSalesHistory, SalesHistoryQueryArgs>({
       query: (params) => {
-        let url = "/bi/sales-history";
+        let url = '/bi/sales-history';
         const searchParams = new URLSearchParams();
-        if (params.start_date) searchParams.append("start_date", params.start_date);
-        if (params.end_date) searchParams.append("end_date", params.end_date);
-        if (params.dish_name) searchParams.append("dish_name", params.dish_name);
-        if (params.category_id !== undefined) searchParams.append("category_id", params.category_id.toString());
-        if (params.page !== undefined) searchParams.append("page", params.page.toString());
-        if (params.page_size !== undefined) searchParams.append("page_size", params.page_size.toString());
-        
+        if (params.start_date) searchParams.append('start_date', params.start_date);
+        if (params.end_date) searchParams.append('end_date', params.end_date);
+        if (params.dish_name) searchParams.append('dish_name', params.dish_name);
+        if (params.category_id !== undefined)
+          searchParams.append('category_id', params.category_id.toString());
+        if (params.page !== undefined) searchParams.append('page', params.page.toString());
+        if (params.page_size !== undefined)
+          searchParams.append('page_size', params.page_size.toString());
+
         if (searchParams.toString()) url += `?${searchParams.toString()}`;
         return url;
       },
-      providesTags: ["BI" as any],
+      providesTags: ['BI' as any],
     }),
-    getDashboardStats: builder.query<DashboardStats, { start_date?: string; end_date?: string } | void>({
+    getDashboardStats: builder.query<
+      DashboardStats,
+      { start_date?: string; end_date?: string } | void
+    >({
       query: (params) => {
-        let url = "/bi/dashboard-stats";
+        let url = '/bi/dashboard-stats';
         if (params) {
           const searchParams = new URLSearchParams();
-          if (params.start_date) searchParams.append("start_date", params.start_date);
-          if (params.end_date) searchParams.append("end_date", params.end_date);
+          if (params.start_date) searchParams.append('start_date', params.start_date);
+          if (params.end_date) searchParams.append('end_date', params.end_date);
           if (searchParams.toString()) url += `?${searchParams.toString()}`;
         }
         return url;
       },
-      providesTags: ["BI" as any],
+      providesTags: ['BI' as any],
     }),
     getProjections: builder.query<ProjectionResponse, string | void>({
       query: (timeframe) => {
-        let url = "/bi/projections";
+        let url = '/bi/projections';
         if (timeframe) {
           url += `?timeframe=${timeframe}`;
         }
         return url;
       },
-      providesTags: ["BI" as any],
+      providesTags: ['BI' as any],
     }),
   }),
 });

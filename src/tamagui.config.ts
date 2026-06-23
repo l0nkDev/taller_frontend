@@ -16,7 +16,7 @@ const color = {
   gray800: '#1f2937',
   gray700: '#364153',
   gray600: '#4b5563',
-  gray500: "#6B7280",
+  gray500: '#6B7280',
   gray200: '#e5e7eb',
   gray300: '#d1d5db',
   green700: '#008236',
@@ -63,7 +63,7 @@ const themes = {
     secondaryText: '#9ca3af',
     brandAccent: color.amber500,
     brandMain: color.orange500,
-  }
+  },
 };
 
 const appConfig = createTamagui({

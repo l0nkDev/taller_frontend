@@ -1,8 +1,8 @@
-import { X, CookingPot, Plus, Save } from "@tamagui/lucide-icons";
-import { Button, Dialog, XStack, YStack, Text, View, Input } from "tamagui";
-import { useState } from "react";
-import { Category, dishesApi } from "../../../api/dishesApi";
-import { useForm } from "@tanstack/react-form";
+import { X, CookingPot, Plus, Save } from '@tamagui/lucide-icons';
+import { Button, Dialog, XStack, YStack, Text, View, Input } from 'tamagui';
+import { useState } from 'react';
+import { useForm } from '@tanstack/react-form';
+import { Category, dishesApi } from '../../../api/dishesApi';
 
 export function CategoryDialog({
   category,
@@ -18,11 +18,11 @@ export function CategoryDialog({
   const [open, setOpen] = useState(false);
   const form = useForm({
     defaultValues: {
-      name: category ? category.name : "",
+      name: category ? category.name : '',
     },
     onSubmit: async ({ value }) => {
       if (!category && !value.name) return;
-      console.log("Sending to FastAPI:", value);
+      console.log('Sending to FastAPI:', value);
       if (category)
         await updateCategory({
           id: category.id,
@@ -37,7 +37,7 @@ export function CategoryDialog({
     <>
       {category ? (
         <div
-          style={{ display: "contents" }}
+          style={{ display: 'contents' }}
           onContextMenu={(e) => {
             e.preventDefault();
             setOpen(true);
@@ -48,13 +48,13 @@ export function CategoryDialog({
             onPress={() => setFilter!(category.id)}
             p="$4"
             bw={2}
-            boc={filter === category.id ? "saddleBrown" : "$cardBorder"}
-            bg={filter === category.id ? "saddleBrown" : "$cardBg"}
+            boc={filter === category.id ? 'saddleBrown' : '$cardBorder'}
+            bg={filter === category.id ? 'saddleBrown' : '$cardBg'}
             br="$5"
-            ai={"center"}
-            jc={"space-between"}
+            ai="center"
+            jc="space-between"
           >
-            <Text fow={500} col={filter === category.id ? "white" : undefined}>
+            <Text fow={500} col={filter === category.id ? 'white' : undefined}>
               {category.name}
             </Text>
           </Button>
@@ -63,10 +63,10 @@ export function CategoryDialog({
         <Button
           onPress={() => setOpen(true)}
           br="$5"
-          ai={"center"}
-          jc={"space-between"}
+          ai="center"
+          jc="space-between"
           backgroundImage="linear-gradient(to right, var(--brandMain), var(--orange500))"
-          color={"white"}
+          color="white"
           icon={<Plus />}
         />
       )}
@@ -81,7 +81,7 @@ export function CategoryDialog({
           />
           <Dialog.Content
             bw={2}
-            boc={"$cardBorder"}
+            boc="$cardBorder"
             p={0}
             onPointerDownOutside={(event: any) => {
               event.preventDefault();
@@ -96,31 +96,24 @@ export function CategoryDialog({
             >
               <XStack
                 backgroundImage="linear-gradient(to right, var(--brandMain), var(--orange500))"
-                p={"$5"}
-                ai={"center"}
-                jc={"space-between"}
-                btrr={"$3"}
-                btlr={"$3"}
+                p="$5"
+                ai="center"
+                jc="space-between"
+                btrr="$3"
+                btlr="$3"
               >
-                <XStack gap={"$3"}>
-                  <View
-                    w={"$4"}
-                    h={"$4"}
-                    br={"$5"}
-                    bc={"#FFFFFF33"}
-                    ai={"center"}
-                    jc={"center"}
-                  >
-                    <CookingPot col={"$white"} />
+                <XStack gap="$3">
+                  <View w="$4" h="$4" br="$5" bc="#FFFFFF33" ai="center" jc="center">
+                    <CookingPot col="$white" />
                   </View>
                   <YStack>
-                    <Text col={"$white"} fos={"$7"} fow={500} mb={"$2"}>
-                      {category ? "Renombrar categoría" : "Crear categoría"}
+                    <Text col="$white" fos="$7" fow={500} mb="$2">
+                      {category ? 'Renombrar categoría' : 'Crear categoría'}
                     </Text>
-                    <Text col={"$amber100"} fos={"$4"}>
+                    <Text col="$amber100" fos="$4">
                       {category
                         ? `Actualiza el nombre de ${category.name}`
-                        : "¿Cómo se llamará la nueva categoría?"}
+                        : '¿Cómo se llamará la nueva categoría?'}
                     </Text>
                   </YStack>
                 </XStack>
@@ -130,22 +123,21 @@ export function CategoryDialog({
                     circular
                     chromeless
                     icon={<X color="$white" size={24} />}
-                    hoverStyle={{ bg: "rgba(255,255,255,0.1)" }}
+                    hoverStyle={{ bg: 'rgba(255,255,255,0.1)' }}
                   />
                 </Dialog.Close>
               </XStack>
-              <YStack gap={"$3"} p={"$5"}>
-                <YStack gap={"$2"}>
-                  <XStack gap={"$2"} ai={"center"}>
-                    <CookingPot size={15} color={"$orange500"} />
+              <YStack gap="$3" p="$5">
+                <YStack gap="$2">
+                  <XStack gap="$2" ai="center">
+                    <CookingPot size={15} color="$orange500" />
                     <Text>Nombre</Text>
-                    <Text col={"$amber700"}>*</Text>
+                    <Text col="$amber700">*</Text>
                   </XStack>
-                  <form.Field
-                    name="name"
-                    children={(field) => (
+                  <form.Field name="name">
+                    {(field) => (
                       <Input
-                        fos={"$5"}
+                        fos="$5"
                         f={1}
                         bw={2}
                         bc="$cardBorder"
@@ -153,7 +145,7 @@ export function CategoryDialog({
                         outlineStyle="none"
                         outlineColor="transparent"
                         focusStyle={{
-                          boc: "$brandMain",
+                          boc: '$brandMain',
                         }}
                         placeholder="Postres"
                         value={field.state.value}
@@ -161,9 +153,9 @@ export function CategoryDialog({
                         onBlur={field.handleBlur}
                       />
                     )}
-                  />
+                  </form.Field>
                 </YStack>
-                <XStack gap={"$3"}>
+                <XStack gap="$3">
                   <Dialog.Close asChild>
                     <Button
                       f={1}
@@ -183,7 +175,7 @@ export function CategoryDialog({
                     hoverStyle={{ scale: 1.02 }}
                     disabledStyle={{ opacity: 0.5 }}
                   >
-                    <Save col="white"></Save>
+                    <Save col="white" />
                     <Text col="white" fontWeight="600" fontFamily="$body">
                       Guardar categoría
                     </Text>

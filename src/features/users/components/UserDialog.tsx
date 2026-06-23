@@ -11,22 +11,12 @@ import {
   ChevronDown,
   Eye,
   EyeOff,
-} from "@tamagui/lucide-icons";
-import { useForm } from "@tanstack/react-form";
-import {
-  Button,
-  Dialog,
-  XStack,
-  YStack,
-  Text,
-  View,
-  Select,
-  Circle,
-  Separator,
-} from "tamagui";
-import { Input } from "../../../components/Input";
-import { useState } from "react";
-import { User, usersApi } from "../../../api/usersApi";
+} from '@tamagui/lucide-icons';
+import { useForm } from '@tanstack/react-form';
+import { Button, Dialog, XStack, YStack, Text, View, Select, Circle, Separator } from 'tamagui';
+import { useState } from 'react';
+import { Input } from '../../../components/Input';
+import { User, usersApi } from '../../../api/usersApi';
 
 export function UserDialog({ editing = null }: { editing: User | null }) {
   const [createUser] = usersApi.useCreateUserMutation();
@@ -36,13 +26,13 @@ export function UserDialog({ editing = null }: { editing: User | null }) {
   const [open, setOpen] = useState(false);
   const form = useForm({
     defaultValues: {
-      username: editing ? editing.username : "",
-      password: "",
-      passwordConfirm: "",
-      fname: editing ? editing.fname : "",
-      lname: editing ? editing.lname : "",
-      phone: editing ? editing.phone : "",
-      role: editing ? editing.role : "waiter",
+      username: editing ? editing.username : '',
+      password: '',
+      passwordConfirm: '',
+      fname: editing ? editing.fname : '',
+      lname: editing ? editing.lname : '',
+      phone: editing ? editing.phone : '',
+      role: editing ? editing.role : 'waiter',
     },
     onSubmit: async ({ value }) => {
       if (
@@ -57,9 +47,9 @@ export function UserDialog({ editing = null }: { editing: User | null }) {
           value.password !== value.passwordConfirm)
       )
         return;
-      console.log("Sending to FastAPI:", value);
-      if (editing) await updateUser({id: editing.id, body: value})
-        else await createUser(value);
+      console.log('Sending to FastAPI:', value);
+      if (editing) await updateUser({ id: editing.id, body: value });
+      else await createUser(value);
       setOpen(false);
     },
   });
@@ -71,7 +61,7 @@ export function UserDialog({ editing = null }: { editing: User | null }) {
             size="$3"
             circular
             chromeless
-            hoverStyle={{ bg: "$amber50" }}
+            hoverStyle={{ bg: '$amber50' }}
             icon={<Pencil size={18} color="$brandMain" />}
           />
         ) : (
@@ -80,7 +70,7 @@ export function UserDialog({ editing = null }: { editing: User | null }) {
             hoverStyle={{ scale: 1.02 }}
             disabledStyle={{ opacity: 0.5 }}
           >
-            <Plus col="white"></Plus>
+            <Plus col="white" />
             <Text col="white" fontWeight="600" fontFamily="$body">
               Nuevo usuario
             </Text>
@@ -96,9 +86,9 @@ export function UserDialog({ editing = null }: { editing: User | null }) {
           exitStyle={{ opacity: 0 }}
         />
         <Dialog.Content
-          w={"60%"}
+          w="60%"
           bw={2}
-          boc={"$cardBorder"}
+          boc="$cardBorder"
           p={0}
           onPointerDownOutside={(event: any) => {
             event.preventDefault();
@@ -113,31 +103,24 @@ export function UserDialog({ editing = null }: { editing: User | null }) {
           >
             <XStack
               backgroundImage="linear-gradient(to right, var(--brandMain), var(--orange500))"
-              p={"$5"}
-              ai={"center"}
-              jc={"space-between"}
-              btrr={"$3"}
-              btlr={"$3"}
+              p="$5"
+              ai="center"
+              jc="space-between"
+              btrr="$3"
+              btlr="$3"
             >
-              <XStack gap={"$3"}>
-                <View
-                  w={"$4"}
-                  h={"$4"}
-                  br={"$5"}
-                  bc={"#FFFFFF33"}
-                  ai={"center"}
-                  jc={"center"}
-                >
-                  <UserIcon col={"$white"} />
+              <XStack gap="$3">
+                <View w="$4" h="$4" br="$5" bc="#FFFFFF33" ai="center" jc="center">
+                  <UserIcon col="$white" />
                 </View>
                 <YStack>
-                  <Text col={"$white"} fos={"$7"} fow={500} mb={"$2"}>
-                    {editing ? "Editar Usuario" : "Nuevo Usuario"}
+                  <Text col="$white" fos="$7" fow={500} mb="$2">
+                    {editing ? 'Editar Usuario' : 'Nuevo Usuario'}
                   </Text>
-                  <Text col={"$amber100"} fos={"$4"}>
+                  <Text col="$amber100" fos="$4">
                     {editing
-                      ? "Actualiza la información del usuario"
-                      : "Completa los datos del nuevo usuario"}
+                      ? 'Actualiza la información del usuario'
+                      : 'Completa los datos del nuevo usuario'}
                   </Text>
                 </YStack>
               </XStack>
@@ -147,23 +130,22 @@ export function UserDialog({ editing = null }: { editing: User | null }) {
                   circular
                   chromeless
                   icon={<X color="$white" size={24} />}
-                  hoverStyle={{ bg: "rgba(255,255,255,0.1)" }}
+                  hoverStyle={{ bg: 'rgba(255,255,255,0.1)' }}
                 />
               </Dialog.Close>
             </XStack>
-            <YStack gap={"$3"} p={"$5"}>
-              <XStack gap={"$3"}>
-                <YStack gap={"$2"}>
-                  <XStack gap={"$2"} ai={"center"}>
-                    <UserIcon size={15} color={"$orange500"} />
+            <YStack gap="$3" p="$5">
+              <XStack gap="$3">
+                <YStack gap="$2">
+                  <XStack gap="$2" ai="center">
+                    <UserIcon size={15} color="$orange500" />
                     <Text>Nombre</Text>
-                    <Text col={"$amber700"}>*</Text>
+                    <Text col="$amber700">*</Text>
                   </XStack>
-                  <form.Field
-                    name="fname"
-                    children={(field) => (
+                  <form.Field name="fname">
+                    {(field) => (
                       <Input
-                        fos={"$5"}
+                        fos="$5"
                         f={1}
                         bw={2}
                         bc="$cardBorder"
@@ -171,7 +153,7 @@ export function UserDialog({ editing = null }: { editing: User | null }) {
                         outlineStyle="none"
                         outlineColor="transparent"
                         focusStyle={{
-                          boc: "$brandMain",
+                          boc: '$brandMain',
                         }}
                         placeholder="Saturnino"
                         value={field.state.value}
@@ -179,19 +161,18 @@ export function UserDialog({ editing = null }: { editing: User | null }) {
                         onBlur={field.handleBlur}
                       />
                     )}
-                  />
+                  </form.Field>
                 </YStack>
-                <YStack gap={"$2"} f={1}>
-                  <XStack gap={"$2"} ai={"center"}>
-                    <UserIcon size={15} color={"$orange500"} />
+                <YStack gap="$2" f={1}>
+                  <XStack gap="$2" ai="center">
+                    <UserIcon size={15} color="$orange500" />
                     <Text>Apellidos</Text>
-                    <Text col={"$amber700"}>*</Text>
+                    <Text col="$amber700">*</Text>
                   </XStack>
-                  <form.Field
-                    name="lname"
-                    children={(field) => (
+                  <form.Field name="lname">
+                    {(field) => (
                       <Input
-                        fos={"$5"}
+                        fos="$5"
                         f={1}
                         bw={2}
                         bc="$cardBorder"
@@ -199,7 +180,7 @@ export function UserDialog({ editing = null }: { editing: User | null }) {
                         outlineStyle="none"
                         outlineColor="transparent"
                         focusStyle={{
-                          boc: "$brandMain",
+                          boc: '$brandMain',
                         }}
                         placeholder="Mamani"
                         value={field.state.value}
@@ -207,21 +188,20 @@ export function UserDialog({ editing = null }: { editing: User | null }) {
                         onBlur={field.handleBlur}
                       />
                     )}
-                  />
+                  </form.Field>
                 </YStack>
               </XStack>
-              <XStack gap={"$3"}>
-                <YStack gap={"$2"} f={1}>
-                  <XStack gap={"$2"} ai={"center"}>
-                    <AtSign size={15} color={"$orange500"} />
+              <XStack gap="$3">
+                <YStack gap="$2" f={1}>
+                  <XStack gap="$2" ai="center">
+                    <AtSign size={15} color="$orange500" />
                     <Text>Usuario</Text>
-                    <Text col={"$amber700"}>*</Text>
+                    <Text col="$amber700">*</Text>
                   </XStack>
-                  <form.Field
-                    name="username"
-                    children={(field) => (
+                  <form.Field name="username">
+                    {(field) => (
                       <Input
-                        fos={"$5"}
+                        fos="$5"
                         f={1}
                         bw={2}
                         bc="$cardBorder"
@@ -229,7 +209,7 @@ export function UserDialog({ editing = null }: { editing: User | null }) {
                         outlineStyle="none"
                         outlineColor="transparent"
                         focusStyle={{
-                          boc: "$brandMain",
+                          boc: '$brandMain',
                         }}
                         placeholder="usuario"
                         value={field.state.value}
@@ -237,19 +217,18 @@ export function UserDialog({ editing = null }: { editing: User | null }) {
                         onBlur={field.handleBlur}
                       />
                     )}
-                  />
+                  </form.Field>
                 </YStack>
-                <YStack gap={"$2"} f={1}>
-                  <XStack gap={"$2"} ai={"center"}>
-                    <Phone size={15} color={"$orange500"} />
+                <YStack gap="$2" f={1}>
+                  <XStack gap="$2" ai="center">
+                    <Phone size={15} color="$orange500" />
                     <Text>Teléfono</Text>
-                    <Text col={"$amber700"}>*</Text>
+                    <Text col="$amber700">*</Text>
                   </XStack>
-                  <form.Field
-                    name="phone"
-                    children={(field) => (
+                  <form.Field name="phone">
+                    {(field) => (
                       <Input
-                        fos={"$5"}
+                        fos="$5"
                         f={1}
                         bw={2}
                         bc="$cardBorder"
@@ -257,7 +236,7 @@ export function UserDialog({ editing = null }: { editing: User | null }) {
                         outlineStyle="none"
                         outlineColor="transparent"
                         focusStyle={{
-                          boc: "$brandMain",
+                          boc: '$brandMain',
                         }}
                         placeholder="77378759"
                         value={field.state.value}
@@ -265,30 +244,26 @@ export function UserDialog({ editing = null }: { editing: User | null }) {
                         onBlur={field.handleBlur}
                       />
                     )}
-                  />
+                  </form.Field>
                 </YStack>
-                <YStack gap={"$2"} f={1}>
-                  <XStack gap={"$2"} ai={"center"}>
-                    <Briefcase size={15} color={"$orange500"} />
+                <YStack gap="$2" f={1}>
+                  <XStack gap="$2" ai="center">
+                    <Briefcase size={15} color="$orange500" />
                     <Text>Rol</Text>
-                    <Text col={"$amber700"}>*</Text>
+                    <Text col="$amber700">*</Text>
                   </XStack>
-                  <form.Field
-                    name="role"
-                    children={(field) => (
+                  <form.Field name="role">
+                    {(field) => (
                       <Select
                         defaultValue="waiter"
                         value={field.state.value}
                         onValueChange={field.handleChange}
                       >
                         <Select.Trigger bw={2} w={180}>
-                          <Select.Value
-                            placeholder="Todos los roles"
-                            fos={"$5"}
-                          />
-                          <ChevronDown pl={"$3"}></ChevronDown>
+                          <Select.Value placeholder="Todos los roles" fos="$5" />
+                          <ChevronDown pl="$3" />
                         </Select.Trigger>
-                        <Select.FocusScope loop trapped focusOnIdle={true}>
+                        <Select.FocusScope loop trapped focusOnIdle>
                           <Select.Content zIndex={200000}>
                             <Select.ScrollUpButton />
                             <Select.Viewport bw={2}>
@@ -296,29 +271,23 @@ export function UserDialog({ editing = null }: { editing: User | null }) {
                                 <Select.Item
                                   index={1}
                                   value="admin"
-                                  hoverStyle={{ backgroundColor: "$gray200" }}
+                                  hoverStyle={{ backgroundColor: '$gray200' }}
                                 >
-                                  <Select.ItemText fos={"$5"}>
-                                    Admin
-                                  </Select.ItemText>
+                                  <Select.ItemText fos="$5">Admin</Select.ItemText>
                                 </Select.Item>
                                 <Select.Item
                                   index={2}
                                   value="waiter"
-                                  hoverStyle={{ backgroundColor: "$gray200" }}
+                                  hoverStyle={{ backgroundColor: '$gray200' }}
                                 >
-                                  <Select.ItemText fos={"$5"}>
-                                    Waiter
-                                  </Select.ItemText>
+                                  <Select.ItemText fos="$5">Waiter</Select.ItemText>
                                 </Select.Item>
                                 <Select.Item
                                   index={3}
                                   value="kitchen"
-                                  hoverStyle={{ backgroundColor: "$gray200" }}
+                                  hoverStyle={{ backgroundColor: '$gray200' }}
                                 >
-                                  <Select.ItemText fos={"$5"}>
-                                    Kitchen
-                                  </Select.ItemText>
+                                  <Select.ItemText fos="$5">Kitchen</Select.ItemText>
                                 </Select.Item>
                               </Select.Group>
                             </Select.Viewport>
@@ -327,22 +296,21 @@ export function UserDialog({ editing = null }: { editing: User | null }) {
                         </Select.FocusScope>
                       </Select>
                     )}
-                  />
+                  </form.Field>
                 </YStack>
               </XStack>
-              <XStack gap={"$3"}>
-                <YStack gap={"$2"} f={1}>
-                  <XStack gap={"$2"}>
-                    <Lock size={15} color={"$orange500"} />
+              <XStack gap="$3">
+                <YStack gap="$2" f={1}>
+                  <XStack gap="$2">
+                    <Lock size={15} color="$orange500" />
                     <Text>Contraseña</Text>
-                    <Text col={"$amber700"}>*</Text>
+                    <Text col="$amber700">*</Text>
                   </XStack>
-                  <form.Field
-                    name="password"
-                    children={(field) => (
+                  <form.Field name="password">
+                    {(field) => (
                       <XStack ai="center" pos="relative">
                         <Input
-                          fos={"$5"}
+                          fos="$5"
                           f={1}
                           bw={2}
                           bc="$cardBorder"
@@ -350,7 +318,7 @@ export function UserDialog({ editing = null }: { editing: User | null }) {
                           outlineStyle="none"
                           outlineColor="transparent"
                           focusStyle={{
-                            boc: "$brandMain",
+                            boc: '$brandMain',
                           }}
                           placeholder="••••••••"
                           value={field.state.value}
@@ -364,32 +332,25 @@ export function UserDialog({ editing = null }: { editing: User | null }) {
                           chromeless
                           p="$2"
                           onPress={() => setSecurePassword(!securePassword)}
-                          icon={
-                            securePassword ? (
-                              <EyeOff size={20} />
-                            ) : (
-                              <Eye size={20} />
-                            )
-                          }
+                          icon={securePassword ? <EyeOff size={20} /> : <Eye size={20} />}
                         />
                       </XStack>
                     )}
-                  />
+                  </form.Field>
                 </YStack>
               </XStack>
-              <XStack gap={"$3"}>
-                <YStack gap={"$2"} f={1}>
-                  <XStack gap={"$2"}>
-                    <Lock size={15} color={"$orange500"} />
+              <XStack gap="$3">
+                <YStack gap="$2" f={1}>
+                  <XStack gap="$2">
+                    <Lock size={15} color="$orange500" />
                     <Text>Confirmar Contraseña</Text>
-                    <Text col={"$amber700"}>*</Text>
+                    <Text col="$amber700">*</Text>
                   </XStack>
-                  <form.Field
-                    name="passwordConfirm"
-                    children={(field) => (
+                  <form.Field name="passwordConfirm">
+                    {(field) => (
                       <XStack ai="center" pos="relative">
                         <Input
-                          fos={"$5"}
+                          fos="$5"
                           f={1}
                           bw={2}
                           bc="$cardBorder"
@@ -397,7 +358,7 @@ export function UserDialog({ editing = null }: { editing: User | null }) {
                           outlineStyle="none"
                           outlineColor="transparent"
                           focusStyle={{
-                            boc: "$brandMain",
+                            boc: '$brandMain',
                           }}
                           placeholder="••••••••"
                           value={field.state.value}
@@ -411,46 +372,31 @@ export function UserDialog({ editing = null }: { editing: User | null }) {
                           chromeless
                           p="$2"
                           onPress={() => setSecureConfirm(!secureConfirm)}
-                          icon={
-                            secureConfirm ? (
-                              <EyeOff size={20} />
-                            ) : (
-                              <Eye size={20} />
-                            )
-                          }
+                          icon={secureConfirm ? <EyeOff size={20} /> : <Eye size={20} />}
                         />
                       </XStack>
                     )}
-                  />
+                  </form.Field>
                 </YStack>
               </XStack>
               <form.Subscribe
-                selector={(state) => [
-                  state.values.password,
-                  state.values.passwordConfirm,
-                ]}
+                selector={(state) => [state.values.password, state.values.passwordConfirm]}
               >
                 {([pass, confirm]) => {
                   if (!pass || !confirm) return null;
                   const matches = pass === confirm;
                   return (
                     <XStack ai="center" gap="$2" px="$2">
-                      <Circle size={8} bg={matches ? "#25ab54" : "#ab2525"} />
-                      <Text
-                        fos="$2"
-                        fontWeight="600"
-                        color={matches ? "#25ab54" : "#ab2525"}
-                      >
-                        {matches
-                          ? "Las contraseñas coinciden"
-                          : "Las contraseñas no coinciden"}
+                      <Circle size={8} bg={matches ? '#25ab54' : '#ab2525'} />
+                      <Text fos="$2" fontWeight="600" color={matches ? '#25ab54' : '#ab2525'}>
+                        {matches ? 'Las contraseñas coinciden' : 'Las contraseñas no coinciden'}
                       </Text>
                     </XStack>
                   );
                 }}
               </form.Subscribe>
               <Separator bw={1.5} />
-              <XStack gap={"$3"}>
+              <XStack gap="$3">
                 <Dialog.Close asChild>
                   <Button
                     f={1}
@@ -475,15 +421,7 @@ export function UserDialog({ editing = null }: { editing: User | null }) {
                     state.values.passwordConfirm,
                   ]}
                 >
-                  {([
-                    fname,
-                    lname,
-                    username,
-                    phone,
-                    role,
-                    password,
-                    passwordConfirm,
-                  ]) => {
+                  {([fname, lname, username, phone, role, password, passwordConfirm]) => {
                     return (
                       <Button
                         f={1}
@@ -501,9 +439,9 @@ export function UserDialog({ editing = null }: { editing: User | null }) {
                         hoverStyle={{ scale: 1.02 }}
                         disabledStyle={{ opacity: 0.5 }}
                       >
-                        <Save col="white"></Save>
+                        <Save col="white" />
                         <Text col="white" fontWeight="600" fontFamily="$body">
-                          {editing ? "Guardar cambios" : "Guardar Usuario"}
+                          {editing ? 'Guardar cambios' : 'Guardar Usuario'}
                         </Text>
                       </Button>
                     );

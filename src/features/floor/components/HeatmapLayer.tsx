@@ -1,7 +1,7 @@
 import { Group, Rect } from 'react-konva';
 
-export const HeatmapLayer = ({ showHeatmap, optState, heatmapData }: any) => {
-  if (!(showHeatmap || optState !== "idle") || !heatmapData) return null;
+export function HeatmapLayer({ showHeatmap, optState, heatmapData }: any) {
+  if (!(showHeatmap || optState !== 'idle') || !heatmapData) return null;
 
   return (
     <Group>
@@ -23,8 +23,8 @@ export const HeatmapLayer = ({ showHeatmap, optState, heatmapData }: any) => {
               listening={false}
             />
           );
-        })
+        }),
       )}
     </Group>
   );
-};
+}

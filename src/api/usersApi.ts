@@ -1,15 +1,8 @@
 // src/features/users/usersApi.ts
 import { baseApi } from './baseApi';
+import { User } from '../store/authSlice';
 
-export interface User {
-    id: number,
-    username: string, 
-    fname: string, 
-    lname: string, 
-    phone: string,
-    role: string,
-    is_active: boolean
-}
+export type { User };
 
 export const usersApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -23,22 +16,22 @@ export const usersApi = baseApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: ['User'], 
+      invalidatesTags: ['User'],
     }),
-    updateUser: builder.mutation<User, {id: number, body: Partial<User>}>({
-      query: ({id, body}) => ({
+    updateUser: builder.mutation<User, { id: number; body: Partial<User> }>({
+      query: ({ id, body }) => ({
         url: `/users/?user_id=${id}`,
         method: 'PUT',
         body,
       }),
-      invalidatesTags: ['User'], 
+      invalidatesTags: ['User'],
     }),
     deleteUser: builder.mutation<User, number>({
       query: (userId) => ({
         url: `/users/?user_id=${userId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['User'], 
+      invalidatesTags: ['User'],
     }),
   }),
   overrideExisting: false,

@@ -2,17 +2,17 @@ import Konva from 'konva';
 import { Group, Line, Circle } from 'react-konva';
 import { useUpdateWallMutation, useCreateWallMutation } from '../../../api/floorApi';
 
-export const WallLayer = ({ 
-  floor, 
-  floorId, 
-  isWallMode, 
-  setSelectedWallId, 
+export function WallLayer({
+  floor,
+  floorId,
+  isWallMode,
+  setSelectedWallId,
   newWallPoints,
   snap,
   dragBoundFunc,
   stageScale,
-  stagePos
-}: any) => {
+  stagePos,
+}: any) {
   const [updateWall] = useUpdateWallMutation();
   const [createWall] = useCreateWallMutation();
 
@@ -23,7 +23,7 @@ export const WallLayer = ({
           <Line
             id={`wall-line-${wall.id}`}
             points={[wall.x1, wall.y1, wall.x2, wall.y2]}
-            stroke={wall.isDoor ? "#f59e0b" : "#1f2937"}
+            stroke={wall.isDoor ? '#f59e0b' : '#1f2937'}
             strokeWidth={8}
             hitStrokeWidth={20}
             lineCap="round"
@@ -48,7 +48,7 @@ export const WallLayer = ({
                     y1: logicalY,
                     x2: wall.x2,
                     y2: wall.y2,
-                    isDoor: wall.isDoor
+                    isDoor: wall.isDoor,
                   });
                 }
               }
@@ -68,15 +68,24 @@ export const WallLayer = ({
                 onDragMove={(e) => {
                   e.cancelBubble = true;
                   const pos = { x: e.target.x(), y: e.target.y() };
-                  e.target.getStage()?.findOne(`#wall-line-${wall.id}`)?.setAttr('points', [pos.x, pos.y, wall.x2, wall.y2]);
+                  e.target
+                    .getStage()
+                    ?.findOne(`#wall-line-${wall.id}`)
+                    ?.setAttr('points', [pos.x, pos.y, wall.x2, wall.y2]);
                   floor.walls?.forEach((w: any) => {
                     if (w.id !== wall.id) {
                       if (Math.abs(w.x1 - wall.x1) < 15 && Math.abs(w.y1 - wall.y1) < 15) {
-                        e.target.getStage()?.findOne(`#wall-line-${w.id}`)?.setAttr('points', [pos.x, pos.y, w.x2, w.y2]);
+                        e.target
+                          .getStage()
+                          ?.findOne(`#wall-line-${w.id}`)
+                          ?.setAttr('points', [pos.x, pos.y, w.x2, w.y2]);
                         e.target.getStage()?.findOne(`#wall-circle-start-${w.id}`)?.position(pos);
                       }
                       if (Math.abs(w.x2 - wall.x1) < 15 && Math.abs(w.y2 - wall.y1) < 15) {
-                        e.target.getStage()?.findOne(`#wall-line-${w.id}`)?.setAttr('points', [w.x1, w.y1, pos.x, pos.y]);
+                        e.target
+                          .getStage()
+                          ?.findOne(`#wall-line-${w.id}`)
+                          ?.setAttr('points', [w.x1, w.y1, pos.x, pos.y]);
                         e.target.getStage()?.findOne(`#wall-circle-end-${w.id}`)?.position(pos);
                       }
                     }
@@ -109,15 +118,24 @@ export const WallLayer = ({
                 onDragMove={(e) => {
                   e.cancelBubble = true;
                   const pos = { x: e.target.x(), y: e.target.y() };
-                  e.target.getStage()?.findOne(`#wall-line-${wall.id}`)?.setAttr('points', [wall.x1, wall.y1, pos.x, pos.y]);
+                  e.target
+                    .getStage()
+                    ?.findOne(`#wall-line-${wall.id}`)
+                    ?.setAttr('points', [wall.x1, wall.y1, pos.x, pos.y]);
                   floor.walls?.forEach((w: any) => {
                     if (w.id !== wall.id) {
                       if (Math.abs(w.x1 - wall.x2) < 15 && Math.abs(w.y1 - wall.y2) < 15) {
-                        e.target.getStage()?.findOne(`#wall-line-${w.id}`)?.setAttr('points', [pos.x, pos.y, w.x2, w.y2]);
+                        e.target
+                          .getStage()
+                          ?.findOne(`#wall-line-${w.id}`)
+                          ?.setAttr('points', [pos.x, pos.y, w.x2, w.y2]);
                         e.target.getStage()?.findOne(`#wall-circle-start-${w.id}`)?.position(pos);
                       }
                       if (Math.abs(w.x2 - wall.x2) < 15 && Math.abs(w.y2 - wall.y2) < 15) {
-                        e.target.getStage()?.findOne(`#wall-line-${w.id}`)?.setAttr('points', [w.x1, w.y1, pos.x, pos.y]);
+                        e.target
+                          .getStage()
+                          ?.findOne(`#wall-line-${w.id}`)
+                          ?.setAttr('points', [w.x1, w.y1, pos.x, pos.y]);
                         e.target.getStage()?.findOne(`#wall-circle-end-${w.id}`)?.position(pos);
                       }
                     }
@@ -156,4 +174,4 @@ export const WallLayer = ({
       )}
     </>
   );
-};
+}

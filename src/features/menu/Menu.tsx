@@ -1,8 +1,8 @@
-import { YStack, XStack, Text, H2, Button, ScrollView } from "tamagui";
-import { useGetCategoriesQuery, useGetDishesQuery } from "../../api/dishesApi";
-import { useState } from "react";
-import { MenuDialog } from "./components/MenuDialog";
-import { CategoryDialog } from "./components/CategoryDialog";
+import { YStack, XStack, Text, H2, Button, ScrollView } from 'tamagui';
+import { useState } from 'react';
+import { useGetCategoriesQuery, useGetDishesQuery } from '../../api/dishesApi';
+import { MenuDialog } from './components/MenuDialog';
+import { CategoryDialog } from './components/CategoryDialog';
 
 export function MenuView() {
   const { data: dishes } = useGetDishesQuery();
@@ -11,7 +11,7 @@ export function MenuView() {
 
   return (
     <ScrollView p="$5" contentContainerStyle={{ pb: 100 }}>
-      <XStack f={1} jc={"space-between"}>
+      <XStack f={1} jc="space-between">
         <YStack mb="$6">
           <H2 fos="$9" color="$primaryText" fontWeight={500}>
             Gestión de Menú
@@ -30,24 +30,22 @@ export function MenuView() {
               onPress={() => setFilter(0)}
               p="$4"
               bw={2}
-              boc={filter === 0 ? "saddleBrown" : "$cardBorder"}
-              bg={filter === 0 ? "saddleBrown" : "$cardBg"}
+              boc={filter === 0 ? 'saddleBrown' : '$cardBorder'}
+              bg={filter === 0 ? 'saddleBrown' : '$cardBg'}
               br="$5"
-              ai={"center"}
-              jc={"space-between"}
+              ai="center"
+              jc="space-between"
             >
-              <Text fow={500} col={filter === 0 ? "white" : undefined}>
+              <Text fow={500} col={filter === 0 ? 'white' : undefined}>
                 Todos
               </Text>
             </Button>
           )}
           {categories &&
             categories.map((c) => (
-              <CategoryDialog category={c} filter={filter} setFilter={setFilter}/>
+              <CategoryDialog category={c} filter={filter} setFilter={setFilter} />
             ))}
-          {categories && (
-            <CategoryDialog category={null} filter={null} setFilter={null}/>
-          )}
+          {categories && <CategoryDialog category={null} filter={null} setFilter={null} />}
         </XStack>
       </ScrollView>
       <XStack gap="$5" flexWrap="wrap">
@@ -62,56 +60,57 @@ export function MenuView() {
                 bg="$cardBg"
                 br="$6"
                 w="100%"
-                $gtSm={{ w: "calc(50% - 15px)" }}
-                $gtMd={{ w: "calc(33.333% - 20px)" }}
-                $gtLg={{ w: "calc(25% - 20px)" }}
+                $gtSm={{ w: 'calc(50% - 15px)' }}
+                $gtMd={{ w: 'calc(33.333% - 20px)' }}
+                $gtLg={{ w: 'calc(25% - 20px)' }}
               >
                 <YStack f={1} jc="space-between">
                   <YStack>
-                    <XStack jc={"space-between"} ai={"center"}>
-                      <Text fos={"$6"} fow={500} f={1} mr="$2">
+                    <XStack jc="space-between" ai="center">
+                      <Text fos="$6" fow={500} f={1} mr="$2">
                         {d.name}
                       </Text>
                       <Text
-                        br={"$3"}
-                        px={"$2.5"}
-                        py={"$1.5"}
-                        fos={"$2"}
+                        br="$3"
+                        px="$2.5"
+                        py="$1.5"
+                        fos="$2"
                         fow={500}
-                        col={d.available ? "$green700" : "$red700"}
-                        bg={d.available ? "$green100" : "$red100"}
+                        col={d.available ? '$green700' : '$red700'}
+                        bg={d.available ? '$green100' : '$red100'}
                       >
-                        {d.available ? "Disponible" : "Agotado"}
+                        {d.available ? 'Disponible' : 'Agotado'}
                       </Text>
                     </XStack>
-                    <Text fos={"$4"} mt={"$3"}>
+                    <Text fos="$4" mt="$3">
                       {d.description}
                     </Text>
                   </YStack>
 
                   <YStack>
-                    <XStack gap={"$3"} ai={"center"} mt={"$4"} mb={"$3"}>
-                      <YStack gap={"$1"}>
-                        <Text fow={600} fos={"$5"}>
-                          {Intl.NumberFormat("es-BO", {
-                            style: "currency",
-                            currency: "BOB",
+                    <XStack gap="$3" ai="center" mt="$4" mb="$3">
+                      <YStack gap="$1">
+                        <Text fow={600} fos="$5">
+                          {Intl.NumberFormat('es-BO', {
+                            style: 'currency',
+                            currency: 'BOB',
                           }).format(d.price)}
                         </Text>
-                        <Text col={"$gray500"} fos={"$3"}>
-                          Costo: {Intl.NumberFormat("es-BO", {
-                            style: "currency",
-                            currency: "BOB",
+                        <Text col="$gray500" fos="$3">
+                          Costo:{' '}
+                          {Intl.NumberFormat('es-BO', {
+                            style: 'currency',
+                            currency: 'BOB',
                           }).format(d.cost || 0)}
                         </Text>
                       </YStack>
                       <Text
-                        col={"$amber700"}
-                        bg={"$amber100"}
-                        fos={"$3"}
-                        px={"$3"}
-                        py={"$1.5"}
-                        br={"$3"}
+                        col="$amber700"
+                        bg="$amber100"
+                        fos="$3"
+                        px="$3"
+                        py="$1.5"
+                        br="$3"
                         fow={500}
                       >
                         {d.category_name}

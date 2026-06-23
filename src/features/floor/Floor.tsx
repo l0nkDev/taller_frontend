@@ -1,29 +1,6 @@
-import { useState, useEffect, useRef } from "react";
-import {
-  Stage,
-  Layer,
-  Group,
-  Transformer,
-} from "react-konva";
-import Konva from "konva";
-import {
-  useGetFloorPlanQuery,
-  useGetFloorsQuery,
-  useUpdateGroupMutation,
-  useUpdateTableMutation,
-  useCreateTableMutation,
-  useDisbandGroupMutation,
-  useCreateGroupMutation,
-  useCreateWallMutation,
-  useUpdateWallMutation,
-  useDeleteWallMutation,
-} from "../../api/floorApi";
-import {
-  useGetActiveOrdersQuery,
-  useSyncBulkOrderMutation,
-  useUpdateOrderDetailMutation,
-  usePayOrderMutation,
-} from "../../api/orderApi";
+import { useState, useEffect, useRef } from 'react';
+import { Stage, Layer, Group, Transformer } from 'react-konva';
+import Konva from 'konva';
 import {
   XStack,
   YStack,
@@ -37,8 +14,7 @@ import {
   Button,
   Spinner,
   Input,
-} from "tamagui";
-import { FloorDialog, PlaceholderFloorDialog } from "./components/FloorDialog";
+} from 'tamagui';
 import {
   CookingPot,
   BrainCircuit,
@@ -59,72 +35,90 @@ import {
   RefreshCcw,
   Map,
   Sparkles,
-} from "@tamagui/lucide-icons";
-import { Dish, useGetDishesQuery } from "../../api/dishesApi";
-import { useAIAssistant } from "./hooks/useAIAssistant";
-import { useLayoutOptimizer } from "./hooks/useLayoutOptimizer";
-import { useFloorInteraction } from "./hooks/useFloorInteraction";
-import { useAppSelector } from "../../store/hooks";
-import { TableNode } from "./components/TableNode";
-import { WallLayer } from "./components/WallLayer";
-import { HeatmapLayer } from "./components/HeatmapLayer";
+} from '@tamagui/lucide-icons';
+import {
+  useGetFloorPlanQuery,
+  useGetFloorsQuery,
+  useUpdateGroupMutation,
+  useUpdateTableMutation,
+  useCreateTableMutation,
+  useDisbandGroupMutation,
+  useCreateGroupMutation,
+  useCreateWallMutation,
+  useUpdateWallMutation,
+  useDeleteWallMutation,
+} from '../../api/floorApi';
+import {
+  useGetActiveOrdersQuery,
+  useSyncBulkOrderMutation,
+  useUpdateOrderDetailMutation,
+  usePayOrderMutation,
+} from '../../api/orderApi';
+import { FloorDialog, PlaceholderFloorDialog } from './components/FloorDialog';
+import { Dish, useGetDishesQuery } from '../../api/dishesApi';
+import { useAIAssistant } from './hooks/useAIAssistant';
+import { useLayoutOptimizer } from './hooks/useLayoutOptimizer';
+import { useFloorInteraction } from './hooks/useFloorInteraction';
+import { useAppSelector } from '../../store/hooks';
+import { TableNode } from './components/TableNode';
+import { WallLayer } from './components/WallLayer';
+import { HeatmapLayer } from './components/HeatmapLayer';
 
 const statusMap: Record<string, { name: string; color: string }> = {
-  T: { name: "TOMADO", color: "$cyan500" },
-  K: { name: "ESPERANDO", color: "$blue500" },
-  C: { name: "COCINANDO", color: "$amber500" },
-  R: { name: "LISTO", color: "$green500" },
-  S: { name: "ENTREGADO", color: "$green700" },
-  X: { name: "CANCELADO", color: "$gray600" },
+  T: { name: 'TOMADO', color: '$cyan500' },
+  K: { name: 'ESPERANDO', color: '$blue500' },
+  C: { name: 'COCINANDO', color: '$amber500' },
+  R: { name: 'LISTO', color: '$green500' },
+  S: { name: 'ENTREGADO', color: '$green700' },
+  X: { name: 'CANCELADO', color: '$gray600' },
 };
 
-const PlaceholderMap = () => (
-  <YStack f={1} gap={"$3"}>
-    <XStack f={1} gap={"$5"}>
-      <YStack f={1} gap={"$3"}>
-        <XStack
-          gap="$3"
-          p="$2"
-          bg="$cardBg"
-          bw={2}
-          boc="$cardBorder"
-          br="$4"
-          ai="center"
-          jc="space-between"
-        >
-          <Button size="$3" />
-        </XStack>
-        <Card
-          bw={2}
-          boc="$cardBorder"
-          bg="$cardBg"
-          br="$6"
-          f={1}
-          ai={"center"}
-          jc={"center"}
-        >
-          <Spinner size="large" color={"$amber700"} scale={2}></Spinner>
-        </Card>
-      </YStack>
-    </XStack>
-  </YStack>
-);
-
-const ErrorScreen = ({refresh} : {refresh: () => void}) => (
-      <View f={1} ai={"center"} jc={"center"}>
-        <YStack ai={"center"} gap={16}>
-          <View ai={"center"} jc={"center"} w={128} h={128} bc={"$amber700"} br={64}>
-            <Blocks col={"$white"} size={64} />
-          </View>
-          <Text fos={24} fow={900}>Error al cargar el plano.</Text>
-          <Button icon={<RefreshCcw/>} onPress={() => refresh()}>Recargar</Button>
+function PlaceholderMap() {
+  return (
+    <YStack f={1} gap="$3">
+      <XStack f={1} gap="$5">
+        <YStack f={1} gap="$3">
+          <XStack
+            gap="$3"
+            p="$2"
+            bg="$cardBg"
+            bw={2}
+            boc="$cardBorder"
+            br="$4"
+            ai="center"
+            jc="space-between"
+          >
+            <Button size="$3" />
+          </XStack>
+          <Card bw={2} boc="$cardBorder" bg="$cardBg" br="$6" f={1} ai="center" jc="center">
+            <Spinner size="large" color="$amber700" scale={2} />
+          </Card>
         </YStack>
-      </View>
-    );
+      </XStack>
+    </YStack>
+  );
+}
 
-export const FloorView = () => {
+function ErrorScreen({ refresh }: { refresh: () => void }) {
+  return (
+    <View f={1} ai="center" jc="center">
+      <YStack ai="center" gap={16}>
+        <View ai="center" jc="center" w={128} h={128} bc="$amber700" br={64}>
+          <Blocks col="$white" size={64} />
+        </View>
+        <Text fos={24} fow={900}>
+          Error al cargar el plano.
+        </Text>
+        <Button icon={<RefreshCcw />} onPress={() => refresh()}>
+          Recargar
+        </Button>
+      </YStack>
+    </View>
+  );
+}
+
+export function FloorView() {
   const [selectedFloor, setSelectedFloor] = useState<number | null>(null);
-  const user = useAppSelector((state) => state.auth.user);
 
   // Fetch floors
   const { data: floors, isFetching, isError, refetch } = useGetFloorsQuery();
@@ -135,8 +129,8 @@ export const FloorView = () => {
     }
   }, [floors, selectedFloor]);
 
- return (
-    <YStack p={"$5"} fg={1} fb={0} overflow="hidden">
+  return (
+    <YStack p="$5" fg={1} fb={0} overflow="hidden">
       <YStack mb="$6">
         <H2 fos="$9" color="$primaryText" fontWeight={500}>
           Plano de piso
@@ -147,86 +141,115 @@ export const FloorView = () => {
       </YStack>
 
       {/* --- ZONA DE BOTONES (REALES VS SKELETONS) --- */}
-      {!isError ? (<><YStack mb="$5">
-        <ScrollView showsHorizontalScrollIndicator={false}>
-          <XStack gap="$2" flexWrap="wrap">
-            {isFetching ? (
-              // Mostramos placeholders si los pisos aún no cargan
-              <>
-                <PlaceholderFloorDialog />
-                <PlaceholderFloorDialog />
-                <PlaceholderFloorDialog />
-                <Button
-                          br="$5"
-                          ai={"center"}
-                          jc={"space-between"}
-                          backgroundImage="linear-gradient(to right, var(--brandMain), var(--orange500))"
-                          color={"white"}
-                          icon={<Plus />}
+      {!isError ? (
+        <>
+          <YStack mb="$5">
+            <ScrollView showsHorizontalScrollIndicator={false}>
+              <XStack gap="$2" flexWrap="wrap">
+                {isFetching ? (
+                  // Mostramos placeholders si los pisos aún no cargan
+                  <>
+                    <PlaceholderFloorDialog />
+                    <PlaceholderFloorDialog />
+                    <PlaceholderFloorDialog />
+                    <Button
+                      br="$5"
+                      ai="center"
+                      jc="space-between"
+                      backgroundImage="linear-gradient(to right, var(--brandMain), var(--orange500))"
+                      color="white"
+                      icon={<Plus />}
+                    />
+                  </>
+                ) : (
+                  // Mostramos los botones reales cuando ya hay datos
+                  <>
+                    {floors &&
+                      floors.map((floor) => (
+                        <FloorDialog
+                          key={`fd-${floor.id}`}
+                          floor={floor}
+                          selectedId={selectedFloor}
+                          setSelectedId={setSelectedFloor}
                         />
-              </>
-            ) : (
-              // Mostramos los botones reales cuando ya hay datos
-              <>
-                {floors && floors.map((floor) => (
-                  <FloorDialog
-                    key={`fd-${floor.id}`}
-                    floor={floor}
-                    selectedId={selectedFloor}
-                    setSelectedId={setSelectedFloor}
-                  />
-                ))}
-                <FloorDialog
-                  floor={null}
-                  selectedId={null}
-                  setSelectedId={null}
-                />
-              </>
-            )}
-          </XStack>
-        </ScrollView>
-      </YStack>
+                      ))}
+                    <FloorDialog floor={null} selectedId={null} setSelectedId={null} />
+                  </>
+                )}
+              </XStack>
+            </ScrollView>
+          </YStack>
 
-      {/* --- ZONA DEL MAPA (REAL VS SKELETON) --- */}
-      <YStack fg={1} fb={0} minHeight={0}>
-        {selectedFloor ? (
-          <InteractiveFloorMap floorId={selectedFloor} key={selectedFloor} />
-        ) : (
-          <PlaceholderMap />
-        )}
-      </YStack></>) : <ErrorScreen refresh={refetch}/>}
+          {/* --- ZONA DEL MAPA (REAL VS SKELETON) --- */}
+          <YStack fg={1} fb={0} minHeight={0}>
+            {selectedFloor ? (
+              <InteractiveFloorMap floorId={selectedFloor} key={selectedFloor} />
+            ) : (
+              <PlaceholderMap />
+            )}
+          </YStack>
+        </>
+      ) : (
+        <ErrorScreen refresh={refetch} />
+      )}
     </YStack>
   );
-};
-const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
-  const user = useAppSelector((state) => state.auth.user);
-  const { data: floor, isLoading, isError, refetch } = useGetFloorPlanQuery(floorId, {skip: !floorId});
-  
+}
+function InteractiveFloorMap({ floorId }: { floorId: number }) {
+  const { role } = useAppSelector((state) => state.auth.user || { role: '' });
   const {
-    optState, setOptState, previewPositions, setPreviewPositions,
-    showHeatmap, setShowHeatmap, heatmapData,
-    runOptimization, applyOptimization
+    data: floor,
+    isLoading,
+    isError,
+    refetch,
+  } = useGetFloorPlanQuery(floorId, { skip: !floorId });
+
+  const {
+    optState,
+    setOptState,
+    previewPositions,
+    setPreviewPositions,
+    showHeatmap,
+    setShowHeatmap,
+    heatmapData,
+    runOptimization,
+    applyOptimization,
   } = useLayoutOptimizer(floor, floorId);
 
   const {
-    dimensions, setDimensions,
+    dimensions,
+    setDimensions,
     stageScale,
-    stagePos, setStagePos,
-    selectedIds, setSelectedIds,
-    isEditMode, setIsEditMode,
-    isWallMode, setIsWallMode,
-    selectedWallId, setSelectedWallId,
-    newWallPoints, setNewWallPoints,
-    handleWheel, checkDeselect, handleNodeSelect,
-    snap, dragBoundFunc
+    stagePos,
+    setStagePos,
+    selectedIds,
+    setSelectedIds,
+    isEditMode,
+    setIsEditMode,
+    isWallMode,
+    setIsWallMode,
+    selectedWallId,
+    setSelectedWallId,
+    newWallPoints,
+    setNewWallPoints,
+    handleWheel,
+    checkDeselect,
+    handleNodeSelect,
+    snap,
+    dragBoundFunc,
   } = useFloorInteraction(floor, optState);
 
   const [dishesMap, setDishesMap] = useState<Record<number, { dish: Dish; quantity: number }>>({});
   const { data: dishes } = useGetDishesQuery();
 
   const {
-    isRecording, aiText, setAiText, isParsingAI,
-    startRecording, stopRecording, handleSendAIText
+    isRecording,
+    aiText,
+    setAiText,
+    isParsingAI,
+    startRecording,
+    stopRecording,
+    handleSendAIText,
   } = useAIAssistant(dishes || [], setDishesMap);
 
   const [updateTable] = useUpdateTableMutation();
@@ -237,11 +260,10 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
 
   const { data: activeOrders } = useGetActiveOrdersQuery(undefined);
   const [syncBulkOrder, { isLoading: isSyncing }] = useSyncBulkOrderMutation();
-  const [updateOrderDetail, { isLoading: isUpdatingDetail }] =
-    useUpdateOrderDetailMutation();
+  const [updateOrderDetail, { isLoading: isUpdatingDetail }] = useUpdateOrderDetailMutation();
   const [payOrder, { isLoading: isPaying }] = usePayOrderMutation();
 
-  const [inputMode, setInputMode] = useState<string>("manual");
+  const [inputMode, setInputMode] = useState<string>('manual');
   const [createWall] = useCreateWallMutation();
   const [updateWall] = useUpdateWallMutation();
   const [deleteWall] = useDeleteWallMutation();
@@ -250,8 +272,6 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
   const stageRef = useRef<Konva.Stage>(null);
   const [containerNode, setContainerNode] = useState<HTMLDivElement | null>(null);
   const lastSelectedRef = useRef<string | null>(null);
-
-
 
   useEffect(() => {
     const currentSelection = selectedIds.length === 1 ? selectedIds[0] : null;
@@ -262,10 +282,10 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
 
       if (currentSelection && dishes && activeOrders && floor) {
         let targetGroupId = null;
-        if (currentSelection.startsWith("group-")) {
-          targetGroupId = parseInt(currentSelection.replace("group-", ""));
-        } else if (currentSelection.startsWith("table-")) {
-          const tId = parseInt(currentSelection.replace("table-", ""));
+        if (currentSelection.startsWith('group-')) {
+          targetGroupId = parseInt(currentSelection.replace('group-', ''), 10);
+        } else if (currentSelection.startsWith('table-')) {
+          const tId = parseInt(currentSelection.replace('table-', ''), 10);
           const parentGroup = floor.table_groups.find((g) =>
             g.current_tables.some((t) => t.id === tId),
           );
@@ -273,13 +293,11 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
         }
 
         if (targetGroupId) {
-          const order = activeOrders.find(
-            (o) => o.tablegroup_id === targetGroupId,
-          );
+          const order = activeOrders.find((o) => o.tablegroup_id === targetGroupId);
           if (order) {
             order.detail.forEach((det) => {
               // FIX: Solo cargamos al carrito local los platillos en estado T (Borrador)
-              if (det.status === "T") {
+              if (det.status === 'T') {
                 const d = dishes.find((dish) => dish.id === det.dish_id);
                 if (d) {
                   if (newMap[d.id]) newMap[d.id].quantity += det.quantity;
@@ -338,10 +356,9 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
   const handleGroup = async () => {
     let tableIds: number[] = [];
     selectedIds.forEach((id) => {
-      if (id.startsWith("table-"))
-        tableIds.push(parseInt(id.replace("table-", "")));
-      else if (id.startsWith("group-")) {
-        const groupId = parseInt(id.replace("group-", ""));
+      if (id.startsWith('table-')) tableIds.push(parseInt(id.replace('table-', ''), 10));
+      else if (id.startsWith('group-')) {
+        const groupId = parseInt(id.replace('group-', ''), 10);
         const group = floor?.table_groups.find((g) => g.id === groupId);
         if (group) group.current_tables.forEach((t) => tableIds.push(t.id));
       }
@@ -352,10 +369,8 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
     if (!firstTableNode) return;
     const absPos = firstTableNode.getAbsolutePosition();
     const absRot = firstTableNode.getAbsoluteRotation();
-    const logicalX =
-      (absPos.x - stageRef.current!.x()) / stageRef.current!.scaleX();
-    const logicalY =
-      (absPos.y - stageRef.current!.y()) / stageRef.current!.scaleY();
+    const logicalX = (absPos.x - stageRef.current!.x()) / stageRef.current!.scaleX();
+    const logicalY = (absPos.y - stageRef.current!.y()) / stageRef.current!.scaleY();
     await createGroup({
       floor_id: floorId,
       table_ids: tableIds,
@@ -368,41 +383,35 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
   };
 
   const handleUngroupOrDelete = async () => {
-    if (selectedIds.length === 1 && selectedIds[0].startsWith("group-")) {
-      const groupId = parseInt(selectedIds[0].replace("group-", ""));
+    if (selectedIds.length === 1 && selectedIds[0].startsWith('group-')) {
+      const groupId = parseInt(selectedIds[0].replace('group-', ''), 10);
       const targetGroup = floor?.table_groups.find((g) => g.id === groupId);
       if (targetGroup) {
         if (targetGroup.current_tables.length > 1) {
           await disbandGroup(groupId).unwrap();
           setSelectedIds([]);
         } else {
-          console.log(
-            `Llamar API DELETE para Mesa: ${targetGroup.current_tables[0].id}`,
-          );
+          console.log(`Llamar API DELETE para Mesa: ${targetGroup.current_tables[0].id}`);
           setSelectedIds([]);
         }
       }
       return;
     }
-    if (selectedIds.length === 1 && selectedIds[0].startsWith("table-")) {
-      const tableId = parseInt(selectedIds[0].replace("table-", ""));
+    if (selectedIds.length === 1 && selectedIds[0].startsWith('table-')) {
+      const tableId = parseInt(selectedIds[0].replace('table-', ''), 10);
       const targetGroup = floor?.table_groups.find((g) =>
         g.current_tables.some((t) => t.id === tableId),
       );
-      const targetTable = targetGroup?.current_tables.find(
-        (t) => t.id === tableId,
-      );
+      const targetTable = targetGroup?.current_tables.find((t) => t.id === tableId);
       if (!targetGroup || !targetTable) return;
       const tableNode = stageRef.current?.findOne(`#table-${tableId}`);
       if (!tableNode) return;
       const absPos = tableNode.getAbsolutePosition();
       const absRot = tableNode.getAbsoluteRotation();
-      const logicalX =
-        (absPos.x - stageRef.current!.x()) / stageRef.current!.scaleX();
-      const logicalY =
-        (absPos.y - stageRef.current!.y()) / stageRef.current!.scaleY();
+      const logicalX = (absPos.x - stageRef.current!.x()) / stageRef.current!.scaleX();
+      const logicalY = (absPos.y - stageRef.current!.y()) / stageRef.current!.scaleY();
       updateTable({
-        tableId: tableId,
+        tableId,
         floor_id: floorId,
         current_group_id: targetTable.base_group_id,
         offset_x: logicalX,
@@ -414,47 +423,40 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
   };
 
   const isMultipleSelected = selectedIds.length > 1;
-  const isGroupSelected =
-    selectedIds.length === 1 && selectedIds[0].startsWith("group-");
-  const isSubSelectedTable =
-    selectedIds.length === 1 && selectedIds[0].startsWith("table-");
+  const isGroupSelected = selectedIds.length === 1 && selectedIds[0].startsWith('group-');
+  const isSubSelectedTable = selectedIds.length === 1 && selectedIds[0].startsWith('table-');
 
   let isComplexGroup = false;
   let currentTargetGroupId = null;
 
   if (isGroupSelected) {
-    const groupId = parseInt(selectedIds[0].replace("group-", ""));
+    const groupId = parseInt(selectedIds[0].replace('group-', ''), 10);
     currentTargetGroupId = groupId;
     const g = floor?.table_groups.find((gr) => gr.id === groupId);
     if (g && g.current_tables.length > 1) isComplexGroup = true;
   } else if (isSubSelectedTable) {
-    const tId = parseInt(selectedIds[0].replace("table-", ""));
-    const g = floor?.table_groups.find((gr) =>
-      gr.current_tables.some((t) => t.id === tId),
-    );
+    const tId = parseInt(selectedIds[0].replace('table-', ''), 10);
+    const g = floor?.table_groups.find((gr) => gr.current_tables.some((t) => t.id === tId));
     currentTargetGroupId = g?.id;
   }
 
-  const activeOrder = activeOrders?.find(
-    (o) => o.tablegroup_id === currentTargetGroupId,
-  );
+  const activeOrder = activeOrders?.find((o) => o.tablegroup_id === currentTargetGroupId);
   const disableScale = isMultipleSelected || isComplexGroup;
-  const showTransformer =
-    isEditMode && selectedIds.length > 0 && !isSubSelectedTable;
+  const showTransformer = isEditMode && selectedIds.length > 0 && !isSubSelectedTable;
 
-  let btnUngroupText = "Eliminar Mesa";
-  if (isGroupSelected && isComplexGroup) btnUngroupText = "Desarmar Grupo";
-  if (isSubSelectedTable) btnUngroupText = "Extraer de Grupo";
+  let btnUngroupText = 'Eliminar Mesa';
+  if (isGroupSelected && isComplexGroup) btnUngroupText = 'Desarmar Grupo';
+  if (isSubSelectedTable) btnUngroupText = 'Extraer de Grupo';
 
-  const shouldShowSidebar = selectedIds.length === 1 && !isSubSelectedTable && !isEditMode && optState === "idle";
+  const shouldShowSidebar =
+    selectedIds.length === 1 && !isSubSelectedTable && !isEditMode && optState === 'idle';
 
-  let displayLabel = "";
+  let displayLabel = '';
   if (shouldShowSidebar) {
     const idStr = selectedIds[0];
-    if (isComplexGroup)
-      displayLabel = `Pedido de Grupo ${idStr.replace("group-", "")}`;
-    else if (idStr.startsWith("group-")) {
-      const gId = parseInt(idStr.replace("group-", ""));
+    if (isComplexGroup) displayLabel = `Pedido de Grupo ${idStr.replace('group-', '')}`;
+    else if (idStr.startsWith('group-')) {
+      const gId = parseInt(idStr.replace('group-', ''), 10);
       const g = floor?.table_groups.find((gr) => gr.id === gId);
       if (g && g.current_tables.length > 0)
         displayLabel = `Pedido de Mesa ${g.current_tables[0].id}`;
@@ -463,22 +465,20 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
 
   // --- LÓGICA DE COBRO ---
   // Filtramos los T (borrador) y X (cancelados) para saber si ya se puede cobrar.
-  const sentDetails = activeOrder?.detail.filter((d) => d.status !== "T") || [];
-  const validSentDetails = sentDetails.filter((d) => d.status !== "X");
+  const sentDetails = activeOrder?.detail.filter((d) => d.status !== 'T') || [];
+  const validSentDetails = sentDetails.filter((d) => d.status !== 'X');
   const allDelivered =
-    validSentDetails.length > 0 &&
-    validSentDetails.every((d) => d.status === "S");
+    validSentDetails.length > 0 && validSentDetails.every((d) => d.status === 'S');
   const hasDraftItems = Object.keys(dishesMap).length > 0;
   const canPay = allDelivered && !hasDraftItems;
 
   if (isLoading) return <PlaceholderMap />;
-  if (isError || !floor)
-    return <ErrorScreen refresh={refetch}/>
+  if (isError || !floor) return <ErrorScreen refresh={refetch} />;
 
   return (
     <YStack f={1} gap="$4">
-      <XStack f={1} gap={"$5"}>
-        <YStack f={1} gap={"$3"}>
+      <XStack f={1} gap="$5">
+        <YStack f={1} gap="$3">
           <XStack
             gap="$3"
             p="$2"
@@ -500,7 +500,7 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
                       <Button
                         size="$3"
                         onPress={() => {
-                          const w = floor?.walls.find(x => x.id === selectedWallId);
+                          const w = floor?.walls.find((x) => x.id === selectedWallId);
                           if (w) updateWall({ wallId: w.id, floor_id: floorId, isDoor: !w.isDoor });
                         }}
                       >
@@ -558,7 +558,7 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
                   setNewWallPoints(null);
                 }}
               >
-                {isWallMode ? "Terminar Paredes" : "Editar Paredes"}
+                {isWallMode ? 'Terminar Paredes' : 'Editar Paredes'}
               </Button>
               <Button
                 size="$3"
@@ -571,24 +571,35 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
                   setNewWallPoints(null);
                 }}
               >
-                {isEditMode ? "Bloquear Mesas" : "Editar Mesas"}
+                {isEditMode ? 'Bloquear Mesas' : 'Editar Mesas'}
               </Button>
-              <Button
-                size="$3"
-                icon={Map}
-                onPress={() => setShowHeatmap(!showHeatmap)}
-              >
-                {showHeatmap ? "Ocultar Heatmap" : "Ver Heatmap"}
+              <Button size="$3" icon={Map} onPress={() => setShowHeatmap(!showHeatmap)}>
+                {showHeatmap ? 'Ocultar Heatmap' : 'Ver Heatmap'}
               </Button>
-              {optState === "preview" ? (
+              {optState === 'preview' ? (
                 <>
-                  <Button size="$3" onPress={applyOptimization}>Aplicar</Button>
-                  <Button size="$3" onPress={() => { setOptState("idle"); setPreviewPositions({}); }}>Cancelar</Button>
+                  <Button size="$3" onPress={applyOptimization}>
+                    Aplicar
+                  </Button>
+                  <Button
+                    size="$3"
+                    onPress={() => {
+                      setOptState('idle');
+                      setPreviewPositions({});
+                    }}
+                  >
+                    Cancelar
+                  </Button>
                 </>
               ) : (
-                (!user || user.role === 'admin') && (
-                  <Button size="$3" icon={Sparkles} onPress={runOptimization} disabled={optState === "optimizing"}>
-                    {optState === "optimizing" ? "Calculando..." : "Auto-Distribuir"}
+                role === 'admin' && (
+                  <Button
+                    size="$3"
+                    icon={Sparkles}
+                    onPress={runOptimization}
+                    disabled={optState === 'optimizing'}
+                  >
+                    {optState === 'optimizing' ? 'Calculando...' : 'Auto-Distribuir'}
                   </Button>
                 )
               )}
@@ -599,13 +610,20 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
             <YStack f={1} overflow="hidden">
               <div
                 ref={setContainerNode}
-                style={{ 
-                  flex: 1, display: "flex", flexDirection: "column",
-                  width: "100%", height: "100%", borderRadius: "$6",
+                style={{
+                  flex: 1,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  width: '100%',
+                  height: '100%',
+                  borderRadius: '$6',
                   backgroundSize: `${snap(10) * stageScale}px ${snap(10) * stageScale}px`,
                   backgroundPosition: `${stagePos.x}px ${stagePos.y}px`,
-                  backgroundImage: (isEditMode || isWallMode) ? `linear-gradient(to right, #e5e7eb 1px, transparent 1px), linear-gradient(to bottom, #e5e7eb 1px, transparent 1px)` : undefined,
-                  backgroundColor: '#ffffff'
+                  backgroundImage:
+                    isEditMode || isWallMode
+                      ? `linear-gradient(to right, #e5e7eb 1px, transparent 1px), linear-gradient(to bottom, #e5e7eb 1px, transparent 1px)`
+                      : undefined,
+                  backgroundColor: '#ffffff',
                 }}
               >
                 <Stage
@@ -640,7 +658,7 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
                             y1: newWallPoints[1],
                             x2: logicalX,
                             y2: logicalY,
-                            isDoor: false
+                            isDoor: false,
                           });
                           setNewWallPoints([logicalX, logicalY, logicalX, logicalY]);
                         }
@@ -658,13 +676,13 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
                     }
                   }}
                   onTouchStart={checkDeselect}
-                  style={{ cursor: isWallMode ? "crosshair" : "grab" }}
+                  style={{ cursor: isWallMode ? 'crosshair' : 'grab' }}
                 >
                   <Layer>
-                    <WallLayer 
-                      floor={floor} 
-                      floorId={floorId} 
-                      isWallMode={isWallMode} 
+                    <WallLayer
+                      floor={floor}
+                      floorId={floorId}
+                      isWallMode={isWallMode}
                       setSelectedWallId={setSelectedWallId}
                       newWallPoints={newWallPoints}
                       snap={snap}
@@ -673,7 +691,7 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
                       stagePos={stagePos}
                     />
 
-                    <HeatmapLayer 
+                    <HeatmapLayer
                       showHeatmap={showHeatmap}
                       optState={optState}
                       heatmapData={heatmapData}
@@ -720,24 +738,24 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
 
                             if (group.current_tables.length === 1) {
                               const innerTable = group.current_tables[0];
-                              const newWidth = snap(Math.max(
-                                20,
-                                Math.abs((innerTable.width || 60) * scaleX),
-                              ));
-                              const newHeight = snap(Math.max(
-                                20,
-                                Math.abs((innerTable.height || 60) * scaleY),
-                              ));
+                              const newWidth = snap(
+                                Math.max(20, Math.abs((innerTable.width || 60) * scaleX)),
+                              );
+                              const newHeight = snap(
+                                Math.max(20, Math.abs((innerTable.height || 60) * scaleY)),
+                              );
                               const newOffsetX = (innerTable.offset_x || 0) * scaleX;
                               const newOffsetY = (innerTable.offset_y || 0) * scaleY;
 
-                              const groupNode = e.target.getStage()?.findOne(`#table-${innerTable.id}`) as Konva.Group;
+                              const groupNode = e.target
+                                .getStage()
+                                ?.findOne(`#table-${innerTable.id}`) as Konva.Group;
                               if (groupNode && typeof groupNode.findOne === 'function') {
                                 groupNode.setAttr('width', newWidth);
                                 groupNode.setAttr('height', newHeight);
                                 groupNode.setAttr('x', newOffsetX);
                                 groupNode.setAttr('y', newOffsetY);
-                                
+
                                 const rect = groupNode.findOne('Rect');
                                 if (rect) {
                                   rect.setAttr('width', newWidth);
@@ -793,20 +811,19 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
                           disableScale
                             ? []
                             : [
-                                "top-left",
-                                "top-center",
-                                "top-right",
-                                "middle-right",
-                                "bottom-right",
-                                "bottom-center",
-                                "bottom-left",
-                                "middle-left",
+                                'top-left',
+                                'top-center',
+                                'top-right',
+                                'middle-right',
+                                'bottom-right',
+                                'bottom-center',
+                                'bottom-left',
+                                'middle-left',
                               ]
                         }
                         resizeEnabled={!disableScale}
                         boundBoxFunc={(oldBox, newBox) => {
-                          if (newBox.width < 20 || newBox.height < 20)
-                            return oldBox;
+                          if (newBox.width < 20 || newBox.height < 20) return oldBox;
                           return newBox;
                         }}
                       />
@@ -819,23 +836,16 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
         </YStack>
 
         {shouldShowSidebar && (
-          <YStack
-            bw={2}
-            boc="$cardBorder"
-            bg="$cardBg"
-            br="$6"
-            overflow="hidden"
-            w={350}
-          >
+          <YStack bw={2} boc="$cardBorder" bg="$cardBg" br="$6" overflow="hidden" w={350}>
             <XStack
-              w={"100%"}
+              w="100%"
               backgroundImage="linear-gradient(to right, var(--brandMain), var(--orange500))"
-              p={"$3"}
-              gap={"$3"}
-              ai={"center"}
+              p="$3"
+              gap="$3"
+              ai="center"
             >
-              <ShoppingCart col={"$white"} size={20} />
-              <Text col={"$white"} fow="500">
+              <ShoppingCart col="$white" size={20} />
+              <Text col="$white" fow="500">
                 {displayLabel}
               </Text>
             </XStack>
@@ -847,71 +857,48 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
               onValueChange={setInputMode}
               flexDirection="column"
             >
-              <Tabs.List
-                p={"$3"}
-                w="100%"
-                bbw={2}
-                bbc="$cardBorder"
-                bg="$cardBg"
-                gap={"$2"}
-                br={0}
-              >
+              <Tabs.List p="$3" w="100%" bbw={2} bbc="$cardBorder" bg="$cardBg" gap="$2" br={0}>
                 <Tabs.Tab
-                  br={"$3"}
+                  br="$3"
                   f={1}
                   value="manual"
-                  bc={inputMode === "manual" ? "transparent" : "$amber100"}
+                  bc={inputMode === 'manual' ? 'transparent' : '$amber100'}
                   backgroundImage={
-                    inputMode === "manual"
-                      ? "linear-gradient(to right, var(--brandMain), var(--orange500))"
+                    inputMode === 'manual'
+                      ? 'linear-gradient(to right, var(--brandMain), var(--orange500))'
                       : undefined
                   }
                 >
                   <CookingPot
-                    col={inputMode === "manual" ? "$white" : undefined}
+                    col={inputMode === 'manual' ? '$white' : undefined}
                     size={16}
-                    mr={"$2"}
+                    mr="$2"
                   />
-                  <SizableText
-                    col={inputMode === "manual" ? "$white" : undefined}
-                  >
+                  <SizableText col={inputMode === 'manual' ? '$white' : undefined}>
                     Manual
                   </SizableText>
                 </Tabs.Tab>
                 <Tabs.Tab
-                  br={"$3"}
+                  br="$3"
                   f={1}
                   value="ai"
-                  bc={inputMode === "ai" ? "transparent" : "$amber100"}
+                  bc={inputMode === 'ai' ? 'transparent' : '$amber100'}
                   backgroundImage={
-                    inputMode === "ai"
-                      ? "linear-gradient(to right, var(--brandMain), var(--orange500))"
+                    inputMode === 'ai'
+                      ? 'linear-gradient(to right, var(--brandMain), var(--orange500))'
                       : undefined
                   }
                 >
-                  <BrainCircuit
-                    col={inputMode === "ai" ? "$white" : undefined}
-                    size={16}
-                    mr={"$2"}
-                  />
-                  <SizableText col={inputMode === "ai" ? "$white" : undefined}>
-                    IA
-                  </SizableText>
+                  <BrainCircuit col={inputMode === 'ai' ? '$white' : undefined} size={16} mr="$2" />
+                  <SizableText col={inputMode === 'ai' ? '$white' : undefined}>IA</SizableText>
                 </Tabs.Tab>
               </Tabs.List>
 
-              <ScrollView
-                f={1}
-                showsVerticalScrollIndicator={false}
-                bbw={2}
-                boc={"$cardBorder"}
-              >
-                {(validSentDetails.length > 0 ||
-                  Object.keys(dishesMap).length > 0) && (
-                  <YStack px={"$3"} gap={"$3"} py={"$3"}>
+              <ScrollView f={1} showsVerticalScrollIndicator={false} bbw={2} boc="$cardBorder">
+                {(validSentDetails.length > 0 || Object.keys(dishesMap).length > 0) && (
+                  <YStack px="$3" gap="$3" py="$3">
                     {/* Título unificado */}
-                    {(validSentDetails.length > 0 ||
-                      Object.keys(dishesMap).length > 0) && (
+                    {(validSentDetails.length > 0 || Object.keys(dishesMap).length > 0) && (
                       <Text fow="bold" col="$blue900" mb="$2">
                         🛒 Pedido de la Mesa
                       </Text>
@@ -919,51 +906,37 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
 
                     {/* 1. ÍTEMS BLOQUEADOS (Ya en cocina o entregados) */}
                     {validSentDetails.map((detail) => {
-                      const dInfo = dishes?.find(
-                        (d) => d.id === detail.dish_id,
-                      );
-                      const isReady = detail.status === "R";
+                      const dInfo = dishes?.find((d) => d.id === detail.dish_id);
+                      const isReady = detail.status === 'R';
 
                       return (
                         <YStack
                           key={`sent-${detail.id}`}
-                          p={"$3"}
-                          gap={"$2"}
-                          backgroundColor={"$gray2"}
-                          br={"$3"}
-                          boc={"$cardBorder"}
+                          p="$3"
+                          gap="$2"
+                          backgroundColor="$gray2"
+                          br="$3"
+                          boc="$cardBorder"
                           bw={2}
                         >
-                          <XStack jc={"space-between"}>
+                          <XStack jc="space-between">
                             <Text color="$gray11">{detail.dish_name}</Text>
-                            <Text color="$gray11">
-                              Bs. {dInfo ? dInfo.price : "0.00"}
-                            </Text>
+                            <Text color="$gray11">Bs. {dInfo ? dInfo.price : '0.00'}</Text>
                           </XStack>
 
-                          <XStack
-                            ai={"center"}
-                            f={1}
-                            jc={"space-between"}
-                            gap={"$2"}
-                          >
+                          <XStack ai="center" f={1} jc="space-between" gap="$2">
                             {/* Sin botones: Solo texto estático indicando la cantidad bloqueada */}
                             <Text fontWeight="bold" fos={14} col="$gray11">
                               Cantidad: {detail.quantity}
                             </Text>
                           </XStack>
 
-                          <XStack
-                            f={1}
-                            jc={"space-between"}
-                            ai={"center"}
-                            mt={"$2"}
-                          >
+                          <XStack f={1} jc="space-between" ai="center" mt="$2">
                             <Text
                               px={8}
                               py={4}
                               bc={statusMap[detail.status].color}
-                              col={"white"}
+                              col="white"
                               fos={12}
                               fow={900}
                               br={5}
@@ -975,12 +948,12 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
                             {isReady && (
                               <Button
                                 size="$2"
-                                bg={statusMap["R"].color}
+                                bg={statusMap.R.color}
                                 disabled={isUpdatingDetail}
                                 onPress={() =>
                                   updateOrderDetail({
                                     detail_id: detail.id,
-                                    status: "S",
+                                    status: 'S',
                                   })
                                 }
                               >
@@ -997,39 +970,34 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
                     {/* 2. ÍTEMS EDITABLES (Borradores guardados y platos nuevos) */}
                     {Object.values(dishesMap).map((e, i) => {
                       const isDraftInDb = activeOrder?.detail.find(
-                        (d) => d.dish_id === e.dish.id && d.status === "T",
+                        (d) => d.dish_id === e.dish.id && d.status === 'T',
                       );
 
                       return (
                         <YStack
-                          p={"$3"}
+                          p="$3"
                           key={`draft-${i}`}
-                          gap={"$2"}
-                          backgroundColor={"$amber50"}
-                          br={"$3"}
-                          boc={"$brandMain"}
+                          gap="$2"
+                          backgroundColor="$amber50"
+                          br="$3"
+                          boc="$brandMain"
                           bw={2}
                         >
-                          <XStack jc={"space-between"}>
+                          <XStack jc="space-between">
                             <Text>{e.dish.name}</Text>
                             <Text>Bs. {e.dish.price}</Text>
                           </XStack>
 
-                          <XStack
-                            ai={"center"}
-                            f={1}
-                            jc={"space-between"}
-                            gap={"$2"}
-                          >
-                            <XStack ai={"center"} f={1} jc={"space-between"}>
+                          <XStack ai="center" f={1} jc="space-between" gap="$2">
+                            <XStack ai="center" f={1} jc="space-between">
                               <View
                                 w={30}
                                 h={30}
-                                br={"$3"}
-                                bg={"$amber200"}
-                                ai={"center"}
-                                jc={"center"}
-                                hoverStyle={{ backgroundColor: "$amber500" }}
+                                br="$3"
+                                bg="$amber200"
+                                ai="center"
+                                jc="center"
+                                hoverStyle={{ backgroundColor: '$amber500' }}
                                 onPress={() =>
                                   setDishesMap((prev) => {
                                     const existing = prev[e.dish.id];
@@ -1058,11 +1026,11 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
                               <View
                                 w={30}
                                 h={30}
-                                br={"$3"}
-                                bg={"$amber200"}
-                                ai={"center"}
-                                jc={"center"}
-                                hoverStyle={{ backgroundColor: "$amber500" }}
+                                br="$3"
+                                bg="$amber200"
+                                ai="center"
+                                jc="center"
+                                hoverStyle={{ backgroundColor: '$amber500' }}
                                 onPress={() =>
                                   setDishesMap((prev) => {
                                     const existing = prev[e.dish.id];
@@ -1070,9 +1038,7 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
                                       ...prev,
                                       [e.dish.id]: {
                                         dish: e.dish,
-                                        quantity: existing
-                                          ? existing.quantity + 1
-                                          : 1,
+                                        quantity: existing ? existing.quantity + 1 : 1,
                                       },
                                     };
                                   })
@@ -1084,11 +1050,11 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
                             <View
                               w={30}
                               h={30}
-                              br={"$3"}
-                              bg={"$red500"}
-                              ai={"center"}
-                              jc={"center"}
-                              hoverStyle={{ backgroundColor: "$red700" }}
+                              br="$3"
+                              bg="$red500"
+                              ai="center"
+                              jc="center"
+                              hoverStyle={{ backgroundColor: '$red700' }}
                               onPress={() =>
                                 setDishesMap((prev) => {
                                   const newMap = { ...prev };
@@ -1097,23 +1063,21 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
                                 })
                               }
                             >
-                              <Trash size={12} col={"$white"} />
+                              <Trash size={12} col="$white" />
                             </View>
                           </XStack>
 
-                          <XStack f={1} jc={"center"} mt={"$2"}>
+                          <XStack f={1} jc="center" mt="$2">
                             <Text
                               px={8}
                               py={4}
-                              bc={isDraftInDb ? statusMap["T"].color : "$gray5"}
-                              col={isDraftInDb ? "white" : "$gray9"}
+                              bc={isDraftInDb ? statusMap.T.color : '$gray5'}
+                              col={isDraftInDb ? 'white' : '$gray9'}
                               fos={12}
                               fow={900}
                               br={5}
                             >
-                              {isDraftInDb
-                                ? statusMap["T"].name
-                                : "NUEVO (SIN GUARDAR)"}
+                              {isDraftInDb ? statusMap.T.name : 'NUEVO (SIN GUARDAR)'}
                             </Text>
                           </XStack>
                         </YStack>
@@ -1121,30 +1085,20 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
                     })}
 
                     {/* TOTAL COMBINADO DE LA MESA */}
-                    {(validSentDetails.length > 0 ||
-                      Object.keys(dishesMap).length > 0) && (
-                      <XStack
-                        jc={"space-between"}
-                        btw={2}
-                        boc={"$cardBorder"}
-                        pt={"$3"}
-                        mt={"$2"}
-                      >
+                    {(validSentDetails.length > 0 || Object.keys(dishesMap).length > 0) && (
+                      <XStack jc="space-between" btw={2} boc="$cardBorder" pt="$3" mt="$2">
                         <Text fow="bold" fos={16}>
                           Total Mesa:
                         </Text>
                         <Text fow="bold" fos={16} col="$brandMain">
-                          Bs.{" "}
+                          Bs.{' '}
                           {(
                             validSentDetails.reduce((tot, item) => {
-                              const d = dishes?.find(
-                                (d) => d.id === item.dish_id,
-                              );
+                              const d = dishes?.find((d) => d.id === item.dish_id);
                               return tot + (d ? d.price * item.quantity : 0);
                             }, 0) +
                             Object.values(dishesMap).reduce(
-                              (tot, item) =>
-                                tot + item.dish.price * item.quantity,
+                              (tot, item) => tot + item.dish.price * item.quantity,
                               0,
                             )
                           ).toFixed(2)}
@@ -1155,9 +1109,9 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
                 )}
 
                 <Tabs.Content value="manual" f={1}>
-                  <YStack p={"$3"} gap={"$3"}>
+                  <YStack p="$3" gap="$3">
                     <XStack>
-                      <Plus size={20} mr={"$2"} col={"$amber700"} />
+                      <Plus size={20} mr="$2" col="$amber700" />
                       <Text>Agregar Items</Text>
                     </XStack>
                     {dishes &&
@@ -1165,14 +1119,14 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
                         d.available ? (
                           <Button
                             key={d.id}
-                            gap={"$2"}
-                            ai={"center"}
-                            jc={"space-between"}
-                            boc={"$cardBorder"}
+                            gap="$2"
+                            ai="center"
+                            jc="space-between"
+                            boc="$cardBorder"
                             bw={2}
-                            p={"$3"}
-                            br={"$3"}
-                            hoverStyle={{ backgroundColor: "$amber100" }}
+                            p="$3"
+                            br="$3"
+                            hoverStyle={{ backgroundColor: '$amber100' }}
                             onPress={() =>
                               setDishesMap((prev) => {
                                 const existing = prev[d.id];
@@ -1180,16 +1134,14 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
                                   ...prev,
                                   [d.id]: {
                                     dish: d,
-                                    quantity: existing
-                                      ? existing.quantity + 1
-                                      : 1,
+                                    quantity: existing ? existing.quantity + 1 : 1,
                                   },
                                 };
                               })
                             }
                           >
                             <Text>{d.name}</Text>
-                            <Text col={"$amber700"}> Bs. {d.price}</Text>
+                            <Text col="$amber700"> Bs. {d.price}</Text>
                           </Button>
                         ) : null,
                       )}
@@ -1197,7 +1149,7 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
                 </Tabs.Content>
 
                 <Tabs.Content value="ai" f={1}>
-                  <YStack p={"$3"} gap={"$3"}>
+                  <YStack p="$3" gap="$3">
                     <Button
                       backgroundImage="linear-gradient(to right, var(--brandMain), var(--orange500))"
                       hoverStyle={{ scale: 1.02 }}
@@ -1205,18 +1157,26 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
                       opacity={isParsingAI ? 0.5 : 1}
                       disabled={isParsingAI}
                       animation="bouncy"
-                      animateOnly={["transform"]}
+                      animateOnly={['transform']}
                       scale={isRecording ? 1.05 : 1}
                     >
-                      {isParsingAI ? <Spinner color="white" /> : <Mic col={isRecording ? "$red500" : "white"} />}
+                      {isParsingAI ? (
+                        <Spinner color="white" />
+                      ) : (
+                        <Mic col={isRecording ? '$red500' : 'white'} />
+                      )}
                       <Text col="white" fontWeight="600" fontFamily="$body">
-                        {isParsingAI ? "Procesando..." : isRecording ? "Detener y Enviar" : "Iniciar pedido por voz"}
+                        {isParsingAI
+                          ? 'Procesando...'
+                          : isRecording
+                            ? 'Detener y Enviar'
+                            : 'Iniciar pedido por voz'}
                       </Text>
                     </Button>
                     <View position="relative">
                       <Input
                         placeholder="Ej: Quisiera dos hamburguesas..."
-                        fos={"$5"}
+                        fos="$5"
                         numberOfLines={4}
                         f={1}
                         bw={2}
@@ -1224,29 +1184,27 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
                         bg="$cardBg"
                         outlineStyle="none"
                         outlineColor="transparent"
-                        focusStyle={{ boc: "$brandMain" }}
+                        focusStyle={{ boc: '$brandMain' }}
                         value={aiText}
                         onChangeText={setAiText}
                         disabled={isParsingAI}
                         onSubmitEditing={handleSendAIText}
                       />
                       <View
-                        position={"absolute"}
-                        b={"$2"}
-                        r={"$2"}
+                        position="absolute"
+                        b="$2"
+                        r="$2"
                         w={30}
                         h={30}
-                        br={"$3"}
-                        backgroundImage={
-                          "linear-gradient(to right, var(--brandMain), var(--orange500))"
-                        }
-                        ai={"center"}
-                        jc={"center"}
+                        br="$3"
+                        backgroundImage="linear-gradient(to right, var(--brandMain), var(--orange500))"
+                        ai="center"
+                        jc="center"
                         onPress={handleSendAIText}
                         hoverStyle={{ scale: 1.1 }}
                         cursor="pointer"
                       >
-                        <Send size={12} col={"$white"} />
+                        <Send size={12} col="$white" />
                       </View>
                     </View>
                   </YStack>
@@ -1256,46 +1214,38 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
               {/* LÓGICA CONDICIONAL DE BOTONES: PAGO VS ACTUALIZACIÓN */}
               {canPay && activeOrder ? (
                 <Button
-                  m={"$3"}
-                  bg={"$green500"}
-                  hoverStyle={{ bg: "$green600" }}
+                  m="$3"
+                  bg="$green500"
+                  hoverStyle={{ bg: '$green600' }}
                   disabled={isPaying}
                   onPress={async () => {
                     await payOrder({
                       order_id: activeOrder.id,
-                      method: "C",
+                      method: 'C',
                     }).unwrap();
                     setSelectedIds([]);
                   }}
                 >
-                  {isPaying ? (
-                    <Spinner color={"white"} />
-                  ) : (
-                    <DollarSign col="white" />
-                  )}
+                  {isPaying ? <Spinner color="white" /> : <DollarSign col="white" />}
                   <Text col="white" fontWeight="bold" fontFamily="$body">
                     Cobrar y Liberar Mesa
                   </Text>
                 </Button>
               ) : (
                 <Button
-                  m={"$3"}
+                  m="$3"
                   backgroundImage="linear-gradient(to right, var(--brandMain), var(--orange500))"
                   hoverStyle={{ scale: 1.02 }}
                   disabled={Object.keys(dishesMap).length === 0 || isSyncing}
-                  opacity={
-                    Object.keys(dishesMap).length === 0 || isSyncing ? 0.5 : 1
-                  }
+                  opacity={Object.keys(dishesMap).length === 0 || isSyncing ? 0.5 : 1}
                   onPress={async () => {
                     if (currentTargetGroupId) {
-                      const itemsToSync = Object.values(dishesMap).map(
-                        (item) => ({
-                          dish_id: item.dish.id,
-                          quantity: item.quantity,
-                          discount: 0,
-                          status: "T",
-                        }),
-                      );
+                      const itemsToSync = Object.values(dishesMap).map((item) => ({
+                        dish_id: item.dish.id,
+                        quantity: item.quantity,
+                        discount: 0,
+                        status: 'T',
+                      }));
                       await syncBulkOrder({
                         tablegroup_id: currentTargetGroupId,
                         items: itemsToSync,
@@ -1303,13 +1253,9 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
                     }
                   }}
                 >
-                  {isSyncing ? (
-                    <Spinner color={"white"} />
-                  ) : (
-                    <Check col="white" />
-                  )}
+                  {isSyncing ? <Spinner color="white" /> : <Check col="white" />}
                   <Text col="white" fontWeight="600" fontFamily="$body">
-                    {activeOrder ? "Actualizar pedido" : "Confirmar pedido"}
+                    {activeOrder ? 'Actualizar pedido' : 'Confirmar pedido'}
                   </Text>
                 </Button>
               )}
@@ -1319,4 +1265,4 @@ const InteractiveFloorMap = ({ floorId }: { floorId: number }) => {
       </XStack>
     </YStack>
   );
-};
+}

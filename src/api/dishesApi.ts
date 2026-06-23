@@ -1,11 +1,10 @@
 // src/features/users/usersApi.ts
 import { baseApi } from './baseApi';
 
-
 export interface Dish {
-  id: number,
-  name: string,
-  description: string,
+  id: number;
+  name: string;
+  description: string;
   category_id: number;
   price: number;
   cost: number;
@@ -14,9 +13,9 @@ export interface Dish {
 }
 
 export interface Category {
-    id: number,
-    name: string, 
-    dishes: Dish[]
+  id: number;
+  name: string;
+  dishes: Dish[];
 }
 
 export const dishesApi = baseApi.injectEndpoints({
@@ -35,15 +34,15 @@ export const dishesApi = baseApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: ['Dish'], 
+      invalidatesTags: ['Dish'],
     }),
-    updateDish: builder.mutation<Dish, {id: number, body: Partial<Dish>}>({
-      query: ({id, body}) => ({
+    updateDish: builder.mutation<Dish, { id: number; body: Partial<Dish> }>({
+      query: ({ id, body }) => ({
         url: `/dishes/?dish_id=${id}`,
         method: 'PUT',
         body,
       }),
-      invalidatesTags: ['Dish'], 
+      invalidatesTags: ['Dish'],
     }),
     createCategory: builder.mutation<Category, Partial<Category>>({
       query: (body) => ({
@@ -51,18 +50,23 @@ export const dishesApi = baseApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: ['Dish'], 
+      invalidatesTags: ['Dish'],
     }),
-    updateCategory: builder.mutation<Category, {id: number, body: Partial<Category>}>({
-      query: ({id, body}) => ({
+    updateCategory: builder.mutation<Category, { id: number; body: Partial<Category> }>({
+      query: ({ id, body }) => ({
         url: `/categories/?category_id=${id}`,
         method: 'PUT',
         body,
       }),
-      invalidatesTags: ['Dish'], 
+      invalidatesTags: ['Dish'],
     }),
   }),
   overrideExisting: false,
 });
 
-export const { useGetDishesQuery, useGetCategoriesQuery, useCreateDishMutation, useUpdateDishMutation } = dishesApi;
+export const {
+  useGetDishesQuery,
+  useGetCategoriesQuery,
+  useCreateDishMutation,
+  useUpdateDishMutation,
+} = dishesApi;
