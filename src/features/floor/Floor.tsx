@@ -47,6 +47,7 @@ import {
   useCreateWallMutation,
   useUpdateWallMutation,
   useDeleteWallMutation,
+  useDeleteTableMutation,
 } from '../../api/floorApi';
 import {
   useGetActiveOrdersQuery,
@@ -260,6 +261,7 @@ function InteractiveFloorMap({ floorId }: { floorId: number }) {
   const [updateTable] = useUpdateTableMutation();
   const [updateGroup] = useUpdateGroupMutation();
   const [createTable] = useCreateTableMutation();
+  const [deleteTable] = useDeleteTableMutation();
   const [disbandGroup] = useDisbandGroupMutation();
   const [createGroup] = useCreateGroupMutation();
 
@@ -396,7 +398,8 @@ function InteractiveFloorMap({ floorId }: { floorId: number }) {
           await disbandGroup(groupId).unwrap();
           setSelectedIds([]);
         } else {
-          console.log(`Llamar API DELETE para Mesa: ${targetGroup.current_tables[0].id}`);
+          const tId = targetGroup.current_tables[0].id;
+          await deleteTable(tId).unwrap();
           setSelectedIds([]);
         }
       }

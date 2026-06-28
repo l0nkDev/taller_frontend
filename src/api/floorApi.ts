@@ -116,6 +116,10 @@ export const floorApi = baseApi.injectEndpoints({
                   }
                   break;
                 }
+                case 'delete_table': {
+                  removeTableFromAnyGroup(data.table_id);
+                  break;
+                }
                 case 'create_group':
                 case 'update_group': {
                   const incomingGroup = data.tablegroup;
@@ -216,6 +220,12 @@ export const floorApi = baseApi.injectEndpoints({
         url: `/editor/tables`,
         method: 'POST',
         body: patch,
+      }),
+    }),
+    deleteTable: builder.mutation<void, number>({
+      query: (tableId) => ({
+        url: `/editor/tables/${tableId}`,
+        method: 'DELETE',
       }),
     }),
 
@@ -352,6 +362,7 @@ export const {
   useCreateFloorMutation,
   useUpdateFloorMutation,
   useCreateTableMutation,
+  useDeleteTableMutation,
   useDisbandGroupMutation,
   useCreateGroupMutation,
   useCreateWallMutation,
