@@ -7,7 +7,7 @@ export function UsersView() {
   const { data } = useGetUsersQuery();
 
   return (
-    <YStack p="$5">
+    <ScrollView p="$5" f={1} contentContainerStyle={{ pb: 100 }}>
       <YStack mb="$6">
         <H2 fos="$9" color="$primaryText" fontWeight={500}>
           Gestión de Usuarios
@@ -115,6 +115,6 @@ export function UsersView() {
         </ScrollView>
         <UserTable />
       </YStack>
-    </YStack>
+    </ScrollView>
   );
 }
