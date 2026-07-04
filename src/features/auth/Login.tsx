@@ -134,7 +134,11 @@ export default function Login() {
               />
             </XStack>
           </YStack>
-
+          <YStack>
+            <Text>Credenciales de prueba:</Text>
+            <Text>Usuario: root</Text>
+            <Text>Contraseña: Pass123*</Text>
+          </YStack>
           <Button
             backgroundImage="linear-gradient(to right, var(--brandMain), var(--orange500))"
             size="$5"
